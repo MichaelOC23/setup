@@ -1,4 +1,4 @@
-
+#!bin/bash 
 #Install Command
 # /bin/bash -c "$(curl -fsSL https://github.com/MichaelOC23/setup/tree/main/jbi-setup.sh)"
 
