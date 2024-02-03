@@ -1,8 +1,12 @@
 
+#Install Command
+# /bin/bash -c "$(curl -fsSL https://github.com/MichaelOC23/setup/tree/main/jbi-setup.sh)"
+
 #Custom hidden root folder for JBI machines to install software
 
 JBI_FOLDER = "$HOME/.jbi"
 mkdir -p $JBI_FOLDER
+
 
 destination_folder="/path/to/destination/folder"
 file_name="jbi-setup.sh"
