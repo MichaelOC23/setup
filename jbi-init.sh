@@ -7,13 +7,22 @@
 JBI_FOLDER = "$HOME/.jbi"
 mkdir -p $JBI_FOLDER
 
-file_name="jbi-setup.sh"
+setup_file_name="jbi-setup.sh"
+env_file_name="env_variables.sh"
 
-url="https://github.com/MichaelOC23/setup/tree/main/jbi-setup.sh"
+setup_url="https://github.com/MichaelOC23/setup/tree/main/jbi-setup.sh"
+setup_url="https://github.com/MichaelOC23/setup/tree/main/env_variables.sh"
 
 # Use curl to download the file
-curl -L $url -o "$JBI_FOLDER/$file_name"
+curl -L $url -o "$JBI_FOLDER/$setup_file_name"
+curl -L $url -o "$JBI_FOLDER/$env_file_name"
 
 # Or make it executable and then run it
-chmod +x $JBI_FOLDER/$file_name
-$destination_folder/$file_name
+chmod +x $JBI_FOLDER/$setup_file_name
+chmod +x $JBI_FOLDER/$env_file_name
+
+echo "export PATH=\"\$PATH:\$HOME/.jbi/env_variables.sh"\" >> ~/test
+
+$JBI_FOLDER/$setup_file_name
+echo 
+source "$HOME/.zshrc"
