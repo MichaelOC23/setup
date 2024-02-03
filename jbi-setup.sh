@@ -1,4 +1,5 @@
 
+#!bin/bash 
 clear
 echo "This script is designed to be run on a new Mac to set up the environment business and development use."
 echo "Each step is laid out below:"
@@ -32,9 +33,6 @@ read_choice() {
             mkdir -p .jbi
 
             cd .jbi
-
-            # Define the new location
-            new_location=
 
             # Copy the script to the new location
             cp $script_path .
