@@ -1,6 +1,6 @@
 
 #!bin/bash 
-clear
+#clear
 echo "This script is designed to be run on a new Mac to set up the environment business and development use."
 echo "Each step is laid out below:"
 
