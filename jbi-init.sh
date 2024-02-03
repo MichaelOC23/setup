@@ -11,12 +11,12 @@ JBI_FOLDER_PATH="$HOME/$JBI_FOLDER"
 setup_file_name="jbi-setup.sh"
 env_file_name="env_variables.sh"
 
-ssetup_url="https://raw.githubusercontent.com/MichaelOC23/setup/main/jbi-setup.sh"
-setup_url="https://raw.githubusercontent.com/MichaelOC23/setup/main/env_variables.sh"
+setup_url="https://raw.githubusercontent.com/MichaelOC23/setup/main/jbi-setup.sh"
+env_url="https://raw.githubusercontent.com/MichaelOC23/setup/main/env_variables.sh"
 
 # Use curl to download the file
-curl -L $url -o "$JBI_FOLDER_PATH/$setup_file_name"
-curl -L $url -o "$JBI_FOLDER_PATH/$env_file_name"
+curl -L $setup_url -o "$JBI_FOLDER_PATH/$setup_file_name"
+curl -L $env_url -o "$JBI_FOLDER_PATH/$env_file_name"
 
 # Or make it executable and then run it
 chmod +x $JBI_FOLDER_PATH/$setup_file_name
