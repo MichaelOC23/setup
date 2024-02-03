@@ -118,12 +118,15 @@ read_choice() {
     4) 
         option4() {
             echp "You chose Option 3:"
-            echo "This will install environment variables using the code-admin scripts."
+            echo "This will install environment variables using the code-admin scripts. 123"
             echo "This will also add the code-admin scripts to your PATH"
-            $VSCODE_FOLDER_PATH = "/Volumes/code/vscode/"
+            
+            VSCODE_FOLDER_PATH = "$HOME/vscode/"
 
-            echo "source /Volumes/code/vscode/code-admin/scripts/ENV_VARIABLES.sh" >> ~/.zshrc
-            echo "source /Volumes/code/vscode/code-admin/scripts/ENV_VARIABLES.sh" >> ~/.bashrc
+            mkdir $VSCODE_FOLDER_PATH
+
+            echo "source $HOME/vscode/code-admin/scripts/ENV_VARIABLES.sh" >> ~/.zshrc
+            echo "source $HOME/vscode/code-admin/scripts/ENV_VARIABLES.sh" >> ~/.bashrc
         }
         option4
         ;;
@@ -220,6 +223,5 @@ while true
         show_menu
         read_choice
 done
-
 
 
