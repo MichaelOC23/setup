@@ -4,8 +4,6 @@
 echo "This script is designed to be run on a new Mac to set up the environment business and development use."
 echo "Each step is laid out below:"
 
-# Function to deinitialize a Git repository
-
 
 show_menu() {
     echo -e "Part 1: Install Homebrew Python 3 and Git\n"
@@ -25,28 +23,37 @@ read_choice() {
         option0() { 
             echo "You chose Option 0:"
             echo "This will copy the script to /usr/local/bin and add it to the PATH variable."
-        
-            # Get the path of the currently running script
-            script_path=$0
 
             cd ~
-            mkdir -p .jbi
 
-            cd .jbi
+            # Get the path of the currently running script
+            script_path=$0
+	    echo "script_path is: $script_path"
 
+	    hid_folder=".jbi"
+            echo "hid_folder is: $hid_folder"
+            
+	    echo "Going to make the .jbi folder"
+            mkdir $hid_folder
+	
+		
             # Copy the script to the new location
-            cp $script_path .
+            cp $script_path "$hid_folder/"
+
+            new_location="$HOME/$hid_folder"
+		touch .zshrc
 
             # Add the new location to the PATH variable
-            export PATH=$PATH:$new_location
-
-            # Add the new location to the JBI_MAC_SETUP_PATH variable
-            # This will also be used to determine if the script has already been run
-            export $JBI_MAC_SETUP_PATH=$new_location
+		echo "export PATH=\$PATH:$new_location" >> ~/.zshrc
 
             source ~/.zshrc
 
             echo "JBI Setup copied and PATH updated."
+
+
+
+
+
         }
         if [ -z "$JBI_MAC_SETUP_PATH" ]
             then
@@ -223,5 +230,3 @@ while true
         show_menu
         read_choice
 done
-
-
