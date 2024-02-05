@@ -4,38 +4,53 @@
 
 #Custom hidden root folder for JBI machines to install software
 cd ~
-JBI_FOLDER = ".jbi"
+echo "This will install: Homebrew and Microsoft 365/Azure Authenticaiton"
+    
+if ! command -v brew &>/dev/null; then
+  echo "Homebrew is not installed. Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$HOME/.zprofile"
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  echo "Homebrew is already installed."
+fi
 
-echo $JBI_FOLDER
-mkdir -p $JBI_FOLDER
 
-JBI_FOLDER_PATH="$HOME/$JBI_FOLDER"
+if ! command -v az &>/dev/null; then
+  echo "Azure CLI is not installed. Attempting to install..."
+  brew install azure-cli
+else
+  echo "Azure CLI is already installed. Attempting to upgrade..."
+  brew upgrade azure-cli
+fi
+az login
+az extension add --name azure-devops
+az devops configure --defaults organization=https://dev.azure.com/justbuildit
 
-echo $JBI_FOLDER_PATH
 
-setup_file_name="jbi-setup.sh"
-env_file_name="env_variables.sh"
+if brew list --versions git >/dev/null; then
+  echo "Git is already installed through Homebrew. Attempting to upgrade..."
+  brew upgrade git
+else
+  echo "Git is not installed through Homebrew. Attempting to install..."
+  brew install git
+fi
 
-setup_file_path = "$JBI_FOLDER_PATH/$setup_file_name"
-env_file_path = "$JBI_FOLDER_PATH/$env_file_name"
+#clone the mac setup folder
+echo "$HOME is Home"
+rm -rf "$HOME/.jbi"
+git clone https://justbuildit@dev.azure.com/justbuildit/product/_git/macsetup "$HOME/.jbi/"
 
-echo $setup_file_path
-echo $env_file_path
-
-setup_url="https://raw.githubusercontent.com/MichaelOC23/setup/main/jbi-setup.sh"
-env_url="https://raw.githubusercontent.com/MichaelOC23/setup/main/env_variables.sh"
 
 # Use curl to download the file
-curl -L $setup_url -o $setup_file_path
-curl -L $env_url -o $env_file_path
+# curl -L $url -o "$JBI_FOLDER_PATH/$setup_file_name"
+# curl -L $url -o "$JBI_FOLDER_PATH/$env_file_name"
 
 # Or make it executable and then run it
-chmod +x $JBI_FOLDER_PATH/$setup_file_name
-chmod +x $JBI_FOLDER_PATH/$env_file_name
+chmod u+x ~/.jbi/ENV_VARIABLES.sh
+chmod u+x ~/.jbi/jbi_init.sh
+chmod u+x ~/.jbi/jbi_setup.sh
 
-echo "export PATH=\"\$PATH:\$HOME/.jbi/env_variables.sh"\" >> ~/.zshrc
+echo "export PATH=\"\$PATH:\$HOME/.jbi/ENV_VARIABLES.sh"\" >> ~/.zshrc
+
 source "$HOME/.zshrc"
-
-$JBI_FOLDER_PATH/$setup_file_name
-
-
