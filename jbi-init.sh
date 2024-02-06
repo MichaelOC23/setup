@@ -41,15 +41,10 @@ echo "$HOME is Home"
 rm -rf "$HOME/.jbi"
 git clone https://justbuildit@dev.azure.com/justbuildit/product/_git/macsetup "$HOME/.jbi/"
 
-
-# Use curl to download the file
-# curl -L $url -o "$JBI_FOLDER_PATH/$setup_file_name"
-# curl -L $url -o "$JBI_FOLDER_PATH/$env_file_name"
-
 # Or make it executable and then run it
 chmod u+x ~/.jbi/ENV_VARIABLES.sh
-chmod u+x ~/.jbi/jbi_init.sh
-chmod u+x ~/.jbi/jbi_setup.sh
+chmod u+x ~/.jbi/jbi-init.sh
+chmod u+x ~/.jbi/jbi-setup.sh
 
 echo "export PATH=\"\$PATH:\$HOME/.jbi/ENV_VARIABLES.sh"\" >> ~/.zshrc
 
