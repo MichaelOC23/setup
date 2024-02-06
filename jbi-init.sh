@@ -44,7 +44,7 @@ git clone https://justbuildit@dev.azure.com/justbuildit/product/_git/macsetup "$
 # Or make it executable and then run it
 chmod u+x ~/.jbi/ENV_VARIABLES.sh
 chmod u+x ~/.jbi/jbi-init.sh
-chmod u+x ~/.jbi/jbi-setup.sh
+chmod u+x ~/.jbi/jbi_setup.sh
 
 echo "export PATH=\"\$PATH:\$HOME/.jbi/ENV_VARIABLES.sh"\" >> ~/.zshrc
 
