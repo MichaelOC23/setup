@@ -83,6 +83,10 @@ read_choice() {
             
             #Create the the dmg folder
             mkdir -p ~/dmg/ 
+	    
+	    #Create the the code folder
+            mkdir -p ~/code/ 
+	    
 
         }
         option1
@@ -128,12 +132,10 @@ read_choice() {
             echo "This will install environment variables using the code-admin scripts. 123"
             echo "This will also add the code-admin scripts to your PATH"
             
-            VSCODE_FOLDER_PATH = "$HOME/vscode/"
+            JBI_FOLDER_PATH = "$HOME/.jbi"
 
-            mkdir $VSCODE_FOLDER_PATH
-
-            echo "source $HOME/vscode/code-admin/scripts/ENV_VARIABLES.sh" >> ~/.zshrc
-            echo "source $HOME/vscode/code-admin/scripts/ENV_VARIABLES.sh" >> ~/.bashrc
+            echo "source $JBI_FOLDER_PATH/ENV_VARIABLES.sh" >> ~/.zshrc
+            echo "source $JBI_FOLDER_PATH/ENV_VARIABLES.sh" >> ~/.bashrc
         }
         option4
         ;;
@@ -200,7 +202,7 @@ read_choice() {
             #Install Postgres and pgadmin4
             brew install postgresql
             brew services start postgresql
-            brew services stop postgresql #(if needed)
+            # brew services stop postgresql #(if needed)
             brew install --cask pgadmin4
 
             #Development 
@@ -213,6 +215,7 @@ read_choice() {
 
             #Audio Recording
             brew install portaudio
+	    brew install ffmpeg
         }
         option6
         ;;
