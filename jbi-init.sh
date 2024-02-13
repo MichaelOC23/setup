@@ -93,6 +93,8 @@ JBI_FOLDER_PATH="$HOME/$JBI_FOLDER"
 git clone "https://github.com/MichaelOC23/setup.git"
 
 # Use 'move' to rename the folder (. folders are hidden)
+echo "about to mvoe setup to .jbi"
+echo "value $JBI_FOLDER_PATH"
 mv "$HOME/setup" $JBI_FOLDER_PATH
 
 # Loop through each .sh file in the .jbi folder
