@@ -2,7 +2,7 @@
 #Install Command
 # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/MichaelOC23/setup/main/jbi-init.sh)"
 
-clear 
+clear
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -70,6 +70,7 @@ fi
 #Custom hidden root folder for JBI machines to install software
 cd "${HOME}"
 JBI_FOLDER=".jbi"
+ARCHIVE_FOLDER="${HOME}/${JBI_FOLDER}-archive/$(date '+%Y-%m-%d_%H-%M-%S')"
 # Check if the folder already exists, if so run some code
 if [ -d "${JBI_FOLDER_PATH}" ]; then
     echo "JBI folder already exists."
@@ -78,11 +79,14 @@ if [ -d "${JBI_FOLDER_PATH}" ]; then
     git add .
     git commit -m "default commit message"
     git push origin main
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Commit Successful for ${PWD} ${NC}"
-    else
-        echo -e "${RED}!! ERROR !! Commit was not successful${NC}"
-    fi
+
+    # Create the archive directory
+    mkdir -p "${ARCHIVE_FOLDER}"
+
+    # Now move the folder
+    echo -p "JBI_FOLDER exists about to move ${HOME}/${JBI_FOLDER} to ${ARCHIVE_FOLDER}"
+    mv "${HOME}/${JBI_FOLDER}" "${ARCHIVE_FOLDER}"
+
 else
     echo "JBI folder does not exist."
     # Add your code here to run when the folder does not exist
