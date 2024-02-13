@@ -20,12 +20,12 @@ NOTE_FOLDER_PATH="$HOME/Library/Mobile Documents/com~apple~CloudDocs/JBI/notes/"
 
 # PATH Export
 export PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin
-export PATH="$PATH:${CODE_ADMIN_DIRECTORY}"
-export PATH="$PATH:${JBI_FOLDER_PATH}"
-export PATH="$PATH:/Applications/geckodriver*"
-export PATH="$PATH:/opt/homebrew/bin/jupyter-lab"
-export PATH="$PATH:${WORKING_DIRECTORY}"
-export PATH="$PATH:${WORKING_DIRECTORY}/shared"
+export PATH="${PATH}:${CODE_ADMIN_DIRECTORY}"
+export PATH="${PATH}:${JBI_FOLDER_PATH}"
+export PATH="${PATH}:/Applications/geckodriver*"
+export PATH="${PATH}:/opt/homebrew/bin/jupyter-lab"
+export PATH="${PATH}:${WORKING_DIRECTORY}"
+export PATH="${PATH}:${WORKING_DIRECTORY}/shared"
 
 json_string=$(dcli note localeFormat=UNIVERSAL -o json)
 # echo "json_string is ${json_string}"
