@@ -28,7 +28,7 @@ export PATH="$PATH:${WORKING_DIRECTORY}"
 export PATH="$PATH:${WORKING_DIRECTORY}/shared"
 
 json_string=$(dcli note localeFormat=UNIVERSAL -o json)
-echo "json_string is ${json_string}"
+# echo "json_string is ${json_string}"
 
 # Ensure 'jq' is available
 if ! command -v jq &>/dev/null; then
