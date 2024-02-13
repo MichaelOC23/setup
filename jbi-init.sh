@@ -116,7 +116,7 @@ for file in "${JBI_FOLDER_PATH}"/*.sh; do
 done
 
 # Define the line to add
-line_to_add='source "$HOME/.jbi/env_variables.sh"'
+line_to_add='source "${HOME}/.jbi/env_variables.sh"'
 
 # Define the path to your .zshrc
 zshrc="$HOME/.zshrc"
