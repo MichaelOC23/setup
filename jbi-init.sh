@@ -82,10 +82,13 @@ if [ -d "${JBI_FOLDER_PATH}" ]; then
 
     # Create the archive directory
     mkdir -p "${ARCHIVE_FOLDER}"
+    echo "Created archive folder: ${ARCHIVE_FOLDER}"
 
     # Now move the folder
-    echo -p "JBI_FOLDER exists about to move ${HOME}/${JBI_FOLDER} to ${ARCHIVE_FOLDER}"
-    mv "${HOME}/${JBI_FOLDER}" "${ARCHIVE_FOLDER}"
+    current_folder="${HOME}/${JBI_FOLDER}"
+    archive_folder="${ARCHIVE_FOLDER}"
+    echo -p "JBI_FOLDER exists about to move ${current_folder}} to ${archive_folder} right now!!!!"
+    mv "${current_folder}" "${archive_folder}"
 
 else
     echo "JBI folder does not exist."
@@ -98,7 +101,7 @@ git clone "https://github.com/MichaelOC23/setup.git"
 
 # Use 'move' to rename the folder (. folders are hidden)
 echo "about to mvoe setup to .jbi       "
-echo "value ${JBI_FOLDER_PATH}"
+echo "value of JBI_FOLDER__PATH is ${JBI_FOLDER_PATH}"
 mv "${HOME}/setup" "${JBI_FOLDER_PATH}"
 
 # Loop through each .sh file in the .jbi folder
