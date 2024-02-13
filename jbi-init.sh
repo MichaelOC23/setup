@@ -2,6 +2,8 @@
 #Install Command
 # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/MichaelOC23/setup/main/jbi-init.sh)"
 
+clear 
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;31m'
@@ -66,7 +68,7 @@ fi
 #Archvie the current .jbi folder if there is one
 
 #Custom hidden root folder for JBI machines to install software
-cd ~
+cd $HOME
 JBI_FOLDER = ".jbi"
 # Check if the folder already exists, if so run some code
 if [ -d "$JBI_FOLDER_PATH" ]; then
@@ -91,7 +93,7 @@ JBI_FOLDER_PATH="$HOME/$JBI_FOLDER"
 git clone "https://github.com/MichaelOC23/setup.git"
 
 # Use 'move' to rename the folder (. folders are hidden)
-mv ~/setup $JBI_FOLDER_PATH
+mv "$HOME/setup" $JBI_FOLDER_PATH
 
 # Loop through each .sh file in the .jbi folder
 for file in "${JBI_FOLDER_PATH}"/*.sh; do
