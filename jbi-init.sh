@@ -69,7 +69,7 @@ fi
 
 #Custom hidden root folder for JBI machines to install software
 cd "${HOME}"
-JBI_FOLDER = ".jbi"
+JBI_FOLDER=".jbi"
 # Check if the folder already exists, if so run some code
 if [ -d "${JBI_FOLDER_PATH}" ]; then
     echo "JBI folder already exists."
