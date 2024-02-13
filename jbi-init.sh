@@ -68,18 +68,18 @@ fi
 #Archvie the current .jbi folder if there is one
 
 #Custom hidden root folder for JBI machines to install software
-cd $HOME
+cd "${HOME}"
 JBI_FOLDER = ".jbi"
 # Check if the folder already exists, if so run some code
-if [ -d "$JBI_FOLDER_PATH" ]; then
+if [ -d "${JBI_FOLDER_PATH}" ]; then
     echo "JBI folder already exists."
-    echo "Comitting changes to current repository at: $pwd"
+    echo "Comitting changes to current repository at: ${pwd}"
     git pull origin main
     git add .
     git commit -m "default commit message"
     git push origin main
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Commit Successful for $PWD ${NC}"
+        echo -e "${GREEN}Commit Successful for ${PWD} ${NC}"
     else
         echo -e "${RED}!! ERROR !! Commit was not successful${NC}"
     fi
@@ -88,14 +88,14 @@ else
     # Add your code here to run when the folder does not exist
 fi
 
-JBI_FOLDER_PATH="$HOME/$JBI_FOLDER"
+JBI_FOLDER_PATH="${HOME}/${JBI_FOLDER}"
 
 git clone "https://github.com/MichaelOC23/setup.git"
 
 # Use 'move' to rename the folder (. folders are hidden)
 echo "about to mvoe setup to .jbi       "
-echo "value $JBI_FOLDER_PATH"
-mv "$HOME/setup" $JBI_FOLDER_PATH
+echo "value ${JBI_FOLDER_PATH}"
+mv "${HOME}/setup" "${JBI_FOLDER_PATH}"
 
 # Loop through each .sh file in the .jbi folder
 for file in "${JBI_FOLDER_PATH}"/*.sh; do
@@ -107,17 +107,17 @@ for file in "${JBI_FOLDER_PATH}"/*.sh; do
     fi
 done
 
-line_to_add='export PATH="$PATH:$HOME/.jbi/env_variables.sh"'
-zshrc="$HOME/.zshrc"
+line_to_add='export PATH="$PATH:$HOME/.jbi/ENV_VARIABLES.sh"'
+zshrc="${HOME}/.zshrc"
 
 # Check if the line already exists in .zshrc
-if ! grep -Fxq "$line_to_add" "$zshrc"; then
+if ! grep -Fxq "${line_to_add}" "${zshrc}"; then
     # If the line does not exist, append it
-    echo "$line_to_add" >>"$zshrc"
+    echo "${line_to_add}" >>"${zshrc}"
     echo "Line added to .zshrc"
 else
     echo "Line already in .zshrc"
 fi
 
-source "$HOME/.zshrc"
+source "${HOME}/.zshrc"
 echo -e "\e[32mThe jbi-init.sh script has been run successfully.\e[0m"
