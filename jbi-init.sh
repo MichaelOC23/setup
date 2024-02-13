@@ -68,41 +68,42 @@ fi
 #Archvie the current .jbi folder if there is one
 
 #Custom hidden root folder for JBI machines to install software
+HOME_DIR="${HOME}"
 cd "${HOME}"
+echo "Current directory is ${PWD} after cd to ${HOME_DIR}"
+
 JBI_FOLDER=".jbi"
-ARCHIVE_FOLDER="${HOME}/${JBI_FOLDER}-archive/$(date '+%Y-%m-%d_%H-%M-%S')"
+JBI_FOLDER_PATH="${HOME}/${JBI_FOLDER}"
+ARCHIVE_FOLDER_DATE_NAME="$(date '+%Y-%m-%d_%H-%M-%S')"
+ARCHIVE_FOLDER_DATE_PATH="${HOME}/.jbi-archive/${ARCHIVE_FOLDER_DATE_NAME}"
+echo "ARCHIVE_FOLDER_DATE_NAME is ${ARCHIVE_FOLDER_DATE_NAME}"
+echo "JBI_FOLDER is ${JBI_FOLDER} and ARCHIVE_FOLDER_DATE_NAME is ${ARCHIVE_FOLDER_DATE_NAME} and JBI_FOLDER_PATH is ${JBI_FOLDER_PATH}"
+
 # Check if the folder already exists, if so run some code
 if [ -d "${JBI_FOLDER_PATH}" ]; then
     echo "JBI folder already exists."
-    echo "Comitting changes to current repository at: ${pwd}"
-    git pull origin main
-    git add .
-    git commit -m "default commit message"
-    git push origin main
 
     # Create the archive directory
-    mkdir -p "${ARCHIVE_FOLDER}"
-    echo "Created archive folder: ${ARCHIVE_FOLDER}"
+    mkdir -p .jbi-archive
+    cd .jbi-archive
+    mkdir -p $ARCHIVE_FOLDER_DATE_NAME
+
+    cd "${HOME}"
 
     # Now move the folder
-    current_folder="${HOME}/${JBI_FOLDER}"
-    archive_folder="${ARCHIVE_FOLDER}"
-    echo -p "JBI_FOLDER exists about to move ${current_folder}} to ${archive_folder} right now!!!!"
-    mv "${current_folder}" "${archive_folder}"
+    echo "Since the JBI_FOLDER exists we are going to move ${JBI_FOLDER_PATH} to ${ARCHIVE_FOLDER_DATE_PATH}"
+    mv "${JBI_FOLDER_PATH}" "${ARCHIVE_FOLDER_DATE_PATH}"
 
 else
     echo "JBI folder does not exist."
     # Add your code here to run when the folder does not exist
 fi
 
-JBI_FOLDER_PATH="${HOME}/${JBI_FOLDER}"
-
-git clone "https://github.com/MichaelOC23/setup.git"
+git clone https://github.com/MichaelOC23/setup.git "${JBI_FOLDER_PATH}"
 
 # Use 'move' to rename the folder (. folders are hidden)
-echo "about to mvoe setup to .jbi       "
-echo "value of JBI_FOLDER__PATH is ${JBI_FOLDER_PATH}"
-mv "${HOME}/setup" "${JBI_FOLDER_PATH}"
+# echo -p "about to mvoe setup to .jbi       "
+# mv "${HOME}/setup" "${JBI_FOLDER_PATH}"
 
 # Loop through each .sh file in the .jbi folder
 for file in "${JBI_FOLDER_PATH}"/*.sh; do
@@ -114,17 +115,20 @@ for file in "${JBI_FOLDER_PATH}"/*.sh; do
     fi
 done
 
-line_to_add='export PATH="$PATH:$HOME/.jbi/ENV_VARIABLES.sh"'
-zshrc="${HOME}/.zshrc"
+# Define the line to add
+line_to_add='source "$HOME/.jbi/env_variables.sh"'
+
+# Define the path to your .zshrc
+zshrc="$HOME/.zshrc"
 
 # Check if the line already exists in .zshrc
-if ! grep -Fxq "${line_to_add}" "${zshrc}"; then
+if ! grep -Fxq "$line_to_add" "$zshrc"; then
     # If the line does not exist, append it
-    echo "${line_to_add}" >>"${zshrc}"
+    echo "$line_to_add" >>"$zshrc"
     echo "Line added to .zshrc"
 else
     echo "Line already in .zshrc"
 fi
 
 source "${HOME}/.zshrc"
-echo -e "\e[32mThe jbi-init.sh script has been run successfully.\e[0m"
+echo "The jbi-init.sh script has been run successfully."
