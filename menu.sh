@@ -2,21 +2,27 @@
 
 # This sources all the functions in the ms_mac_functions.sh file
 # These will be used to perform the actions in the menu
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-echo "Script directory: $script_dir"
+# script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# echo "Script directory: $script_dir"
+
 # Initial full path
-FULL_PATH="Users/michasmi/code/vscode/code-admin/scripts"
-#/Volumes/code/vscode/code-admin/scripts"
+
+
 
 # Navigate up two levels
-VSCODE_PATH=$(dirname $(dirname "$script_dir"))
+# VSCODE_PATH=$(dirname $(dirname "$script_dir"))
 
 # Print the result
-echo "VSCode path: $VSCODE_PATH"
+# echo "VSCode path: $VSCODE_PATH"
 
-COMMUNIFY_PATH="$CODE_FOLDER_PATH/communify"
-PRODUCT_TOOLS_PATH="$CODE_FOLDER_PATH/product-tools"
+#Key folders
+CODE_FOLDER_PATH="${HOME}/code"
+JBI_FOLDER_PATH="${HOME}/.jbi"
+COMMUNIFY_PATH="${CODE_FOLDER_PATH}/communify"
+PRODUCT_TOOLS_PATH="${CODE_FOLDER_PATH}/product-tools"
+CODE_ADMIN_PATH="${CODE_FOLDER_PATH}/code-admin"
 
+#Color Variables for text
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;31m'
@@ -28,9 +34,9 @@ show_menu() {
     echo -e "Please choose one of the following options (enter the number):\n"
     echo -e "|-------------------------------------------------------------|\n"
 
-    echo -e "0) Commit the current repository\n"
+    echo -e "${BLUE}0) Commit the current repository${NC}\n"
     echo -e "1) Commit and Push All: VSCODE .JBI COMMUNIFY\n"
-    echo -e "2) Start / Restart Stable Tools\n"
+    echo -e "${BLUE}2) Start / Restart Stable Tools${NC}\n"
     echo -e "3) Start Doccano\n"
     # echo -e "4) Update .zshrc\n"
     # echo -e "5) Edit default .zshrc file\n"
@@ -38,9 +44,9 @@ show_menu() {
     echo -e "7) Restart Postgres 14\n"
     # echo -e "8) launch e2aserver\n"
     # echo -e "9) Launch stable\n"
-    echo -e "10) Create/replace .jbi symbolic links\n"
-    echo -e "101) Rotate Encryption Keys\n"
-    echo -e "1977) Deinitialize vscode\n"
+    echo -e "${BLUE}10) Create/replace .jbi symbolic links${NC}\n"
+    echo -e "101) Generate an Encryption Key\n"
+    echo -e "${BLUE}1977) Deinitialize vscode${NC}\n"
     echo -e "2008) DISCARD all changes and REPLACE with latest version from Azure Devops\n"
 
 }
@@ -54,7 +60,7 @@ commit_current_folder() {
     git push origin main
 
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Commit Successful for $PWD ${NC}"
+        echo -e "${GREEN}Commit Successful for ${PWD} ${NC}"
     else
         echo -e "${RED}!! ERROR !! Commit was not successful${NC}"
     fi
@@ -66,7 +72,7 @@ read_choice() {
     read -p "Enter choice [1 - 8]: " choice
     case $choice in
     1000)
-        nano /Volumes/code/vscode/code-admin/scripts/menu.sh
+        sublime "${JBI_PATH}/jbi.sublime-workspace"
         ;;
 
     0)
@@ -82,6 +88,12 @@ read_choice() {
         commit_current_folder
 
         cd "$CODE_FOLDER_PATH/product-tools" || exit
+        commit_current_folder
+
+        cd "$CODE_FOLDER_PATH/vscode" || exit
+        commit_current_folder
+
+        cd "$CODE_FOLDER_PATH/code_admin" || exit
         commit_current_folder
 
         cd $HOME/.jbi || exit
@@ -100,10 +112,11 @@ read_choice() {
             kill $APP_PY_PID
         fi
 
-        cd "$HOME/code"
-        rm -rf .stable
-        mkdir -p .stable
+        # Reinstall the Environment
         STABLE_DIR="$HOME/code/.stable"
+        rm -rf $STABLE_DIR
+        mkdir -p $STABLE_DIR
+
         cd $STABLE_DIR
 
         git clone "https://michael:$AZURE_DEVOPS_PAT@dev.azure.com/$AZURE_DEVOPS_ORG/product-development/_git/communify"
@@ -178,17 +191,7 @@ read_choice() {
         ;;
 
     10)
-        echo "Creating/Replacing .jbi symbolic links"
-
-        #clone the mac setup folder
-        rm -rf ~/code/macsetup
-        git clone https://justbuildit@dev.azure.com/justbuildit/product/_git/macsetup ~/code/macsetup/
-
-        #Create the .jbi folder and link it to the jbi folder in the code-admin repo
-        rm -rf ~/.jbi
-        ln -s ~/code/macsetup/ ~/jbi
-        mv ~/jbi ~/.jbi
-
+        echo "EMPTY"
         ;;
 
     101)
