@@ -41,6 +41,8 @@ check_git_installed() {
 install_git() {
     echo "Installing Git..."
     brew install git
+    echo "Installing github"
+    brew install gh
 }
 
 # Check if Homebrew is installed, if not, install it
