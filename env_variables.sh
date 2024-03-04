@@ -149,14 +149,10 @@ export AZURE_PROJECTS_ENDPOINT="https://dev.azure.com/${AZURE_DEVOPS_ORG}/_apis/
 
 #Standardize python commands
 export PATH="/opt/homebrew/bin:$PATH"
-alias python="/opt/homebrew/bin/python3.12"
-alias python3="/opt/homebrew/bin/python3.12"
-alias pip="/opt/homebrew/bin/pip3"
+alias python='python3'
+alias pip='pip3'
 alias llmstart="cd ${COMMUNIFY_FOLDER_PATH} && llm_launch.sh"
 alias llmstop="cd ${COMMUNIFY_FOLDER_PATH} && llm_launch.sh stop"
-
-# alias python='python3'
-# alias pip='pip3'
 
 # ADD LATER: Aliases for running Audio Transcription
 # alias Audio= ${VENV_PATH}/venv/bin/python ${PATH TO Audio.py}
@@ -168,3 +164,7 @@ if [ "${LOG_LEVEL}" = "VERBOSE" ]; then
     env
     echo -e "\033[0m"
 fi
+
+# alias python="/opt/homebrew/bin/python3.12"
+# alias python3="/opt/homebrew/bin/python3.12"
+# alias pip="/opt/homebrew/bin/pip3"

@@ -65,7 +65,12 @@ read_choice() {
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
             # Add Homebrew to your PATH in /Users/yourname/.zprofile:
-            eval "$(/opt/homebrew/bin/brew shellenv)"
+            (
+                echo
+                echo 'eval "$(/opt/homebrew/bin/brew shellenv)"'
+            ) >>${HOME}/.zprofile
+                 eval "$(/opt/homebrew/bin/brew shellenv)"
+            source ${HOME}/.zprofile
 
             # Install Python 3
             brew install python3
@@ -102,16 +107,16 @@ read_choice() {
             #Install Rosetta
             softwareupdate --install-rosetta
 
-            brew install azure-cli
-            az login
-            az extension add --name azure-devops
-            az devops configure --defaults organization=https://dev.azure.com/outercircles
+            # brew install azure-cli
+            # az login
+            # az extension add --name azure-devops
+            # az devops configure --defaults organization=https://dev.azure.com/outercircles
 
             #Dashlane CLI
             brew install dashlane/tap/dashlane-cli
 
-            mkdir -p ~/vscode
-            git clone https://dev.azure.com/outercirclesdev/vscode-dev/_git/VSCodeVersions
+            mkdir -p ~/code
+            # git clone https://dev.azure.com/outercirclesdev/vscode-dev/_git/VSCodeVersions
 
         }
         option3
@@ -119,7 +124,7 @@ read_choice() {
     4)
         option4() {
             echp "You chose Option 3:"
-            echo "This will install environment variables using the code-admin scripts. 123"
+            echo "This will install environment variables using the code-admin scripts."
             echo "This will also add the code-admin scripts to your PATH"
 
             JBI_FOLDER_PATH = "$HOME/.jbi"
@@ -160,6 +165,9 @@ read_choice() {
 
             #Local LLM Tools
             brew install --cask lm-studio
+
+            #Security
+            brew install 1password-cli
 
         }
         option5
@@ -212,6 +220,10 @@ read_choice() {
             cd llama.cpp
             mkdir -p build && cd build
             cmake --build . --config Release
+
+            brew install ollama
+
+            brew install utm
         }
         option6
         ;;
