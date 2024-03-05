@@ -107,12 +107,14 @@ read_choice() {
             az extension add --name azure-devops
             az devops configure --defaults organization=https://dev.azure.com/outercircles
             git config --global init.defaultBranch main
+            git config pull.rebase false
 
             #Dashlane CLI
             brew install dashlane/tap/dashlane-cli
 
             mkdir -p "${HOME}/code"
-            # git clone https://dev.azure.com/outercirclesdev/vscode-dev/_git/VSCodeVersions
+            cd "${HOME}/code"
+            continuous_integration.sh
 
         }
         option3
@@ -122,15 +124,9 @@ read_choice() {
             echp "You chose Option 3:"
             echo "This will install environment variables using the code-admin scripts."
             echo "This will also add the code-admin scripts to your PATH"
-            $VSCODE_FOLDER_PATH = "${HOME}/code/vscode/"
-
-<<<<<<< HEAD
-            echo "source /Users/michasmi/.jbi/env_variables.sh" >>~/.zshrc
-            echo "source /Volumes/code/vscode/code-admin/scripts/ENV_VARIABLES.sh" >>~/.bashrc
-=======
-            echo "source ${HOME}/.jbi/env_variables.sh" >>~/.zshrc
-            echo "source ${HOME}/.jbi/env_variables.sh" >>~/.bashrc
->>>>>>> d962ec871f74066595923d3f791fc70f5023c040
+            VSCODE_FOLDER_PATH="${HOME}/code/vscode/"
+            echo -e "source ${HOME}/.jbi/env_variables.sh" >>~/.zshrc
+            echo -e "source ${HOME}/.jbi/env_variables.sh" >>~/.bashrc
         }
         option4
         ;;
