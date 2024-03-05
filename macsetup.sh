@@ -119,10 +119,10 @@ read_choice() {
             echp "You chose Option 3:"
             echo "This will install environment variables using the code-admin scripts."
             echo "This will also add the code-admin scripts to your PATH"
-            $VSCODE_FOLDER_PATH = "/Volumes/code/vscode/"
+            $VSCODE_FOLDER_PATH = "${HOME}/code/vscode/"
 
-            echo "source /Volumes/code/vscode/code-admin/scripts/ENV_VARIABLES.sh" >>~/.zshrc
-            echo "source /Volumes/code/vscode/code-admin/scripts/ENV_VARIABLES.sh" >>~/.bashrc
+            echo "source ${HOME}/.jbi/env_variables.sh" >>~/.zshrc
+            echo "source ${HOME}/.jbi/env_variables.sh" >>~/.bashrc
         }
         option4
         ;;
@@ -143,17 +143,17 @@ read_choice() {
             brew install --cask arc
 
             #Design
-            brew install --cask figma
-            brew install --cask adobe-creative-cloud
+            # brew install --cask figma
+            # brew install --cask adobe-creative-cloud
 
             #Communication Apps
-            brew install --cask slack
+            # brew install --cask slack
             brew install --cask zoom
-            brew install --cask signal
-            brew install --cask whatsapp
+            # brew install --cask signal
+            # brew install --cask whatsapp
 
             #Music
-            brew install --cask spotify
+            # brew install --cask spotify
 
             #Security
             brew install 1password-cli
