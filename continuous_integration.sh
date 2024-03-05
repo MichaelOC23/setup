@@ -4,30 +4,31 @@
 base_dir="${HOME}/code"
 
 # Navigate to the base directory
-cd "$base_dir" || { echo "Error: Directory '$base_dir' not found."; exit 1; }
+cd "$base_dir" || {
+  echo "Error: Directory '$base_dir' not found."
+  exit 1
+}
 
-# Get the list of repositories using Azure CLI
-repo_info=$(az repos list --project product-development --org https://dev.azure.com/justbuildit --query "[].{Name:name, HTTPS:remoteUrl}" -o table)
+# Get the list of repositories using Azure CLI with -o tsv for easier parsing
+repo_info=$(az repos list --project product-development --org https://dev.azure.com/justbuildit --query "[].{Name:name, HTTPS:remoteUrl}" -o tsv)
 
-# Iterate through the repo info 
-while IFS= read -r line; do
-  # Skip header lines
-  if [[ $line == *"Name"* || $line == *"-"* ]]; then 
-      continue
-  fi
+# Check if repo_info is empty
+if [ -z "$repo_info" ]; then
+  echo "No repositories found or error retrieving repositories."
+  exit 1
+fi
 
-  repo_name=$(echo "$line" | awk '{print $1}')
-  repo_url=$(echo "$line" | awk '{print $2}')
-
+# Iterate through the repo info
+while IFS=$'\t' read -r repo_name repo_url; do
   if [ -d "$repo_name" ]; then
     # Existing repo: cd into it and pull
     cd "$repo_name"
     echo "Updating existing repository: $repo_name"
     git pull origin main || echo "Error: Pull failed for $repo_name"
-    cd ..  # Go back to the base directory
+    cd .. # Go back to the base directory
   else
-    # New repo: clone it 
+    # New repo: clone it
     echo "Cloning new repository: $repo_name"
-    git clone $repo_url 
+    git clone $repo_url
   fi
-done <<< "$repo_info"
+done <<<"$repo_info"
