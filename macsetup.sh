@@ -6,7 +6,8 @@ echo "Each step is laid out below:"
 
 show_menu() {
     echo -e "Part 1: Install Homebrew Python 3 and Git\n"
-    echo -e "Part 2: Install Azure CLI\n"
+    echo -e "Part 2: Create a DMG folder and disk image\n"
+    echo -e "Part 3: Install Azure CLI\n"
     echo -e "Part 3: Install environment variables using the code-admin scripts\n"
     echo -e "Part 4: Install Business Applications\n"
     echo -e "Part 5: Install Development Applications\n"
@@ -98,6 +99,7 @@ read_choice() {
             echo "This will install Azure CLI and Dashlane CLI"
 
             #Install Rosetta
+            echo "Installing Rosetta .... this could take a while ... please be patient."
             softwareupdate --install-rosetta
 
             brew install azure-cli
@@ -108,7 +110,7 @@ read_choice() {
             #Dashlane CLI
             brew install dashlane/tap/dashlane-cli
 
-            mkdir -p ~/vscode
+            mkdir -p ~/code
             git clone https://dev.azure.com/outercirclesdev/vscode-dev/_git/VSCodeVersions
 
         }
@@ -121,7 +123,7 @@ read_choice() {
             echo "This will also add the code-admin scripts to your PATH"
             $VSCODE_FOLDER_PATH = "/Volumes/code/vscode/"
 
-            echo "source /Volumes/code/vscode/code-admin/scripts/ENV_VARIABLES.sh" >>~/.zshrc
+            echo "source /Users/michasmi/.jbi/env_variables.sh" >>~/.zshrc
             echo "source /Volumes/code/vscode/code-admin/scripts/ENV_VARIABLES.sh" >>~/.bashrc
         }
         option4
