@@ -106,12 +106,13 @@ read_choice() {
             az login
             az extension add --name azure-devops
             az devops configure --defaults organization=https://dev.azure.com/outercircles
+            git config --global init.defaultBranch main
 
             #Dashlane CLI
             brew install dashlane/tap/dashlane-cli
 
-            mkdir -p ~/code
-            git clone https://dev.azure.com/outercirclesdev/vscode-dev/_git/VSCodeVersions
+            mkdir -p "${HOME}/code"
+            # git clone https://dev.azure.com/outercirclesdev/vscode-dev/_git/VSCodeVersions
 
         }
         option3

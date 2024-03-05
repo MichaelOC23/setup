@@ -95,21 +95,31 @@ read_choice() {
     1)
         echo "You chose Option 1: Commit and Push All: VSCODE .JBI COMMUNIFY\n"
         echo "Committing and pushing $VSCODE_FOLDER_PATH"
-        # Navigate to ~/vsce
-        cd "$CODE_FOLDER_PATH/communify" || exit
+        # Navigate to your code directory
+        cd "${HOME}/code" || {
+            echo "Error: '${HOME}/code' directory not found."
+            exit 1
+        }
+
+        # Find and iterate through all directories
+        for dir in */; do
+            cd "$dir" # Enter the directory
+
+            # Check if it's a Git repository
+            if [ -d .git ]; then
+                commit_current_folder
+            else
+                echo -e "${RED}Skipping ${PWD} (not a Git repository)${NC}"
+            fi
+
+            cd .. # Go back to the parent directory
+        done
+
+        cd ${HOME}/.jbi || exit
         commit_current_folder
 
-        cd "$CODE_FOLDER_PATH/product-tools" || exit
-        commit_current_folder
-
-        cd "$CODE_FOLDER_PATH/vscode" || exit
-        commit_current_folder
-
-        cd "$CODE_FOLDER_PATH/code_admin" || exit
-        commit_current_folder
-
-        cd $HOME/.jbi || exit
-        commit_current_folder
+        cd "${HOME}"
+        exit 0
 
         ;;
 
@@ -220,7 +230,17 @@ read_choice() {
         ;;
 
     10)
-        echo "EMPTY"
+
+        PROJECT_NAME="product-development" # The name of your Azure DevOps project
+        REPO_NAME=$(basename "$(pwd)")
+        cp "${HOME}/code/.gitignore" "${PWD}/.gitignore"                                      # The name of your repository - this script sets it to the name of the current directory
+        az repos create --name "$REPO_NAME" --project "$PROJECT_NAME"                         # Create a new repository in Azure DevOps
+        git init                                                                              # Initialize a new Git repository in the current directory if it's not already a repository
+        git add .                                                                             # Add all files in the current directory to the repository
+        git commit -m "Initial commit"                                                        # Commit the files
+        git remote add origin https://dev.azure.com/justbuildit/$PROJECT_NAME/_git/$REPO_NAME # Add the Azure DevOps repository as a remote to your local repository
+        git push -u origin --all                                                              # Push your code to the Azure DevOps repository
+        echo "Repository '$REPO_NAME' initialized and pushed to Azure DevOps."
         ;;
 
     101)
@@ -264,7 +284,15 @@ read_choice() {
         fi
 
         ;;
+    2009)
+        echo "You chose Option 2009:"
+        ls -l
+        cd "${PWD}"
+        echo "is it different?"
+        ls -l
 
+        exit 0
+        ;;
     *)
         echo "Invalid choice. Exiting ..."
         exit 0
