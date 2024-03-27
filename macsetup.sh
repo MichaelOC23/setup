@@ -1,3 +1,4 @@
+#!/bin/bash
 clear
 echo "This script is designed to be run on a new Mac to set up the environment business and development use."
 echo "Each step is laid out below:"
@@ -211,6 +212,9 @@ read_choice() {
             brew install --cask sublime-text
             brew install --cask postman
             brew install --cask docker
+
+            #Communify
+            brew install nats-server
 
             #Audio Recording
             brew install portaudio

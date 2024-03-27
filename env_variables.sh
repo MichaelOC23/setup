@@ -154,6 +154,28 @@ alias pip='pip3'
 alias llmstart="cd ${COMMUNIFY_FOLDER_PATH} && llm_launch.sh"
 alias llmstop="cd ${COMMUNIFY_FOLDER_PATH} && llm_launch.sh stop"
 
+# Get the ngrok public URL
+# Make the curl request and use jq to parse the JSON response, extracting the public_url
+NGROK_PUBLIC_URL=$(curl -s \
+    -X GET \
+    -H "Authorization: Bearer ${NGROK_API_KEY}" \
+    -H "Ngrok-Version: 2" \
+    "https://api.ngrok.com/endpoints" | jq -r '.endpoints[0].public_url')
+
+# Check if the URL was successfully extracted
+if [ -z "$NGROK_PUBLIC_URL" ]; then
+    echo "Failed to extract the public URL."
+    exit 1
+else
+    echo "Extracted Public URL: $NGROK_PUBLIC_URL"
+fi
+
+# Export the public URL as an environment variable
+export NGROK_PUBLIC_URL
+
+# Now, NGROK_PUBLIC_URL is available as an environment variable in this script's execution context
+# To use it in other terminal sessions or scripts, you might need to source this script or handle it differently
+
 # ADD LATER: Aliases for running Audio Transcription
 # alias Audio= ${VENV_PATH}/venv/bin/python ${PATH TO Audio.py}
 # alias AudioStop= echo 1 > ${stop path}
