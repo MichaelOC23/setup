@@ -216,6 +216,9 @@ read_choice() {
             #Communify
             brew install nats-server
 
+            #Image OCR
+            brew install tesseract
+
             #Audio Recording
             brew install portaudio
         }

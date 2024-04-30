@@ -54,6 +54,8 @@ export COMMUNIFY_FOLDER_PATH="${CODE_FOLDER_PATH}/communify"                 # "
 export COMMUNIFY_SHARED_FOLDER_PATH="${CODE_FOLDER_PATH}/communify/shared"   # "#Key Folder Locations THESE MUST BE CORRECT"
 export CODE_ADMIN_FOLDER_PATH="${CODE_FOLDER_PATH}/code-admin"               # "#Key Folder Locations THESE MUST BE CORRECT"
 export PERSONAL_EXPENSES_FOLDER_PATH="${CODE_FOLDER_PATH}/personal-expenses" # "#Key Folder Locations THESE MUST BE CORRECT"
+export DOWJONES_CLASSES_FOLDER_PATH="${CODE_FOLDER_PATH}/dow_jones_service/classes"
+export PYTHONPATH="${DOWJONES_CLASSES_FOLDER_PATH}:$PYTHONPATH"
 
 #KEY IO Folder Locations
 export IO_FOLDER_PATH="${HOME}/Library/Mobile Documents/com~apple~CloudDocs/jbi" # "File in-out temp folder (general)
@@ -101,6 +103,7 @@ export PATH="${PATH}:${COMMUNIFY_FOLDER_PATH}"             # This allows easy ru
 export PATH="${PATH}:${COMMUNIFY_SHARED_FOLDER_PATH}"      # This allows all the files in main communify folder to include shared libraries in the shared folder
 export PATH="${PATH}:${CODE_ADMIN_FOLDER_PATH}"            # This is mostly a dev area for script. It's nice to be able to run them without typing the full path.
 export PATH="${PATH}:${PERSONAL_EXPENSES_FOLDER_PATH}"     # There are a number of libraries here that need their own folder to not lose track of them
+export PATH="${PATH}:${DOWJONES_CLASSES_FOLDER_PATH}"
 
 # Set the default editor to Visual Studio Code
 export EDITOR="code"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# echo $1
+echo $1
 # echo $2
 # echo $3
 
@@ -8,9 +8,9 @@ HEADERS="Content-Type: application/json"
 PROMPT=$1
 
 REQUEST="{\
-      \"model\": \"gpt-4-1106-preview\",\
+      \"model\": \"gpt-4-turbo\",\
       \"messages\": [{\"role\": \"user\", \"content\": \"$PROMPT\"}],\
-      \"temperature\": 0.7\
+      \"temperature\": 0.1\
 }"
 
 echo $REQUEST
