@@ -1,0 +1,65 @@
+*_modules/
+*_modules*
+*_ignore/
+*_ignore*
+*-ignore/
+*-ignore*
+jbi_venv/
+*_venv/
+*_venv*
+*_ScriptOutput/*
+*_ScriptOutput*
+*_temp/
+*-temp*
+*.wav
+*.mp3
+*.mp4
+*.m4a
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# VSCode
+.vscode/

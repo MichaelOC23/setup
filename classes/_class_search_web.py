@@ -1,5 +1,5 @@
 """googlesearch is a Python library for searching Google, easily."""
-from pyppeteer import launch
+
 import os
 import threading
 from langchain.retrievers.you import YouRetriever
@@ -16,7 +16,7 @@ import imagehash
 import requests
 from io import BytesIO
 
-import _class_storage as azstr
+from classes import _class_storage as azstr
 
 yr = YouRetriever()
 
@@ -291,6 +291,7 @@ class Search:
         return asyncio.run(self.async_get_web_page(url))
 
     async def async_get_web_page(self, url):
+        from pyppeteer import launch
         browser = None
         try:
             browser = await launch(headless=True)

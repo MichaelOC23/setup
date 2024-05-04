@@ -1,0 +1,264 @@
+pyaudio
+deepgram-sdk
+python-dotenv
+numpy
+requests
+langchain
+# langchain==0.0.314 
+azure-storage-blob 
+azure-storage-blob[aio]
+azure-identity
+azure-data-tables
+azure-data-tables[aio]
+asyncio
+openai
+aiohttp
+google-api-python-client
+googlesearch-python
+chromadb
+nasdaq-data-link
+asyncpg
+yfinance
+langchain_openai
+ollama
+langchain # Python client for LangChain API
+langchainhub # Python client for LangChainHub API
+langchain-community # Python client for LangChain Community API
+langsmith # Python client for LangChain AI API
+duckduckgo-search
+
+# ipython
+# streamlit-option-menu
+# datasets 
+# opencv-python-headless
+# selenium
+# chrome-cookiejar
+# pyppeteer
+# matplotlib==3.5.1
+# pandas
+# pypdf
+# # opencv-python-headless
+# ydata-profiling
+# opencv-python
+# psycopg2-binary
+# sqlalchemy
+# faker
+# streamlit-aggrid
+# fastembed
+# # streamlit-code-editor
+# streamlit-monaco
+# streamlit-chat 
+# streamlit-ace # Streaml
+
+# azure-cognitiveservices-speech
+# pdf2image
+# pdfminer.six
+# gpt4all
+# pytesseract
+# pypdf2
+# pdfplumber
+# python-docx
+# python-pptx
+# openpyxl
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Whisper Transcription
+# pyaudio
+# SpeechRecognition
+# --extra-index-url https://download.pytorch.org/whl/cu116
+# torch
+# numpy
+# git+https://github.com/openai/whisper.git
+
+# #Azure
+# azure-cognitiveservices-speech
+# azure-storage-blob
+# azure-communication-phonenumbers
+# azure-communication-sms
+
+# scipy
+#Debugging
+ptvsd
+
+# Web Frameworks and HTTP Clients
+# fastapi  # Fast (high-performa#nce) web framework for building APIs
+flask  # Lightweight web framework for Python
+Flask-APScheduler
+
+# uvicorn  # ASGI server implementation, using uvloop and httptools
+# uvloop # Fast implementation of asyncio event loop on top of libuv
+# aiohttp  # Asynchronous HTTP client/server framework
+# httpx  # Async HTTP client/server for Python
+requests  # HTTP library for Python
+watchdog  # Library for monitoring file system events --- #!speeds up streamlit
+# feedparser  # Universal feed parser (RSS/Atom)
+
+
+# Data Manipulation
+# regex  # Alternative regular expression module for Python
+# beautifulsoup4  # Library for web scraping purposes
+# html2text  # Convert HTML to Markdown-formatted text
+# numpy  # Library for numerical computing in Python
+# pandas  # Data manipulation library
+# pydantic  # Data validation and settings management using Python type hints
+# python-dateutil  # Library for manipulating dates and times in Python
+
+#Audio File Manipulation
+# pydub  # Manipulate audio with a simple and easy high-level interface
+# mutagen  # Library for handling audio metadata
+# pyaudio  # Library for audio I/O
+# sounddevice  # Library for audio playback and recording
+
+# Database Connectivity
+# chromadb  # Python client for ChromaDB
+# psycopg2-binary  # PostgreSQL adapter for Python
+#SQLAlchemy  # SQL toolkit and Object-Relational Mapping (ORM) for Python
+#sqlalchemy-utils  # Various utility functions for SQLAlchemy
+#sqlparse  # Non-validating SQL parser for Python
+#azure-storage-blob # Python client for Azure Blob Storage
+
+#Apple Connectivity
+#pyobjc # Python client for Apple's Objective-C runtime
+
+
+# Google Connectivity
+# google-auth  # Library for Google Authentication
+# google-api-python-client 
+# google-auth-httplib2 
+# google-auth-oauthlib
+
+# Authentication
+# oauthlib  # Library for OAuth 1.0 and 2.0 clients
+
+# Machine Learning
+# huggingface-hub  # Library for accessing models and datasets from Hugging Face Hub
+# sentence-transformers  # Library for sentence embeddings
+#tensorflow  # Open-source machine learning framework
+
+#Jupyter Notebooks
+#jupyter_client  # Jupyter protocol client APIs
+#jupyterlab  # JupyterLab computational environment
+
+#Large Language Models
+# langchain  # Python client for LangChain API
+# langchainhub  # Python client for LangChainHub API
+# langchain-community  # Python client for LangChain Community API
+# langsmith  # Python client for LangChain AI API
+
+#! DO NOT ACTIVATE Documentation and tagging tools
+#doccano  # Annotation tool for text data
+
+# Natural Language Processing
+# nltk  # Natural Language Toolkit for Python
+
+# Testing
+#pytest  # Testing framework for Python
+#selenium  # Web testing framework for Python
+
+# Visualization
+#matplotlib  # Plotting library for Python
+#plotly  # Interactive visualization library
+# #seaborn  # Statistical data visualization
+streamlit  # App framework for building data apps
+# streamlit-ace # Streamlit component for the Ace code editor
+# streamlit-aggrid # Streamlit component for the AgGrid table
+# streamlit-audiorec # Streamlit component for recording audio
+# streamlit-elements # Streamlit component for rendering HTML elements
+# streamlit-extras # Streamlit component for rendering HTML elements
+# extra-streamlit-components # Streamlit component for rendering HTML elements
+# spacy-streamlit #st-annotated-text
+# streamlit-monaco
+# streamlit-ace # Streamlit component for the Ace code editor
+# streamlit-shadcn-ui
+#streamlit-labelstudio # Streamlit component for Label Studio
+# streamlit-text-labeler # Streamlit component for labeling text
+#streamlit-pandas-profiling # Streamlit component for rendering Pandas Profiling
+# streamlit-wordcloud
+# streamlit-excel-table
+# st-material-table
+# streamlit-tags
+# streamlit-tree-select
+# streamlit-card
+# streamlit-modal
+
+# Office Data Manipulation
+# openpyxl  # Library for reading/writing Excel files
+
+# # PDF Manipulation
+# pdf2image  # Convert PDF pages to images
+# pdfminer.six  # Library for extracting text from PDF files
+# pdfplumber  # Library for extracting information from PDF files
+# pytesseract # Python client for Tesseract OCR
+# pypdf2  # Library for reading PDF files
+# tk # Python client for Tinkter
+
+#! 3rd Party Data
+#Financial Data
+# quandl  # Python client for Quandl API
+# finnhub-python  # Python client for Finnhub API
+# nasdaq-data-link # Python client for Nasdaq Data Link API
+# plaid-python  # Python client for Plaid API
+# yfinance  # Python client for Yahoo Finance API
+
+#Artificial Intelligence
+#gpt4all # Python client for GPT4All API
+# #ollama # Python client for Ollama API
+# openai # Python client for OpenAI API
+# #openai-whisper # Python client for OpenAI Whisper API
+
+# #Cloud Providers
+# google-api-python-client  # Python client for Google APIs
+
+# # Symbolic Mathematics
+# sympy  # Library for symbolic mathematics in Python
+
+# File Monitoring
+watchfiles  # Library for watching files and directories for changes
+
+# Unicode Character Width
+#wcwidth  # Determine the printable width of Unicode characters
+
+# # WebSocket Communication
+# websockets  # Library for building WebSocket servers and clients
+
+# # URL Parsing
+# yarl  # URL parsing library
+
+# # ZIP Archive Handling
+# zipp  # Library for handling ZIP archives
+
+# #Required for Chainlit
+# chainlit
+# chromadb
+# datasets
+# langchain
+# langchain_openai
+# langchain_pinecone
+# # openai
+# pinecone-client
+# pymupdf
+# # requests
+# tiktoken
+# ctransformers

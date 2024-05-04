@@ -57,7 +57,7 @@ export PATH="/System/Cryptexes/App/usr/bin:/usr/bin:/bin" # Standard Path
 export PATH="${PATH}:/usr/sbin:/sbin:/usr/local/bin"      # Standard Path
 
 # Add additional locations to the PATH
-export PATH="${PYTHONPATH}:${HOME}/.jbi/classes"
+export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes"
 export PATH="${PATH}:/opt/homebrew/bin:/opt/homebrew/sbin" # Homebrew
 export PATH="${PATH}:/Applications/geckodriver*"           # For Scraping
 export PATH="${PATH}:/opt/homebrew/bin/jupyter-lab"        # For Jupier Lab

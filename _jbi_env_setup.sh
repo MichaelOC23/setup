@@ -16,7 +16,7 @@ cd "$SCRIPT_DIR" || exit 1
 REQUIREMENTS_FILE="${SCRIPT_DIR}/requirements.txt"
 echo "Requirements file: $REQUIREMENTS_FILE"
 
-VENV_NAME="${CURRENT_DIR}_venv"
+VENV_NAME="jbi_venv"
 
 # Form the name of the virtual environment directory
 VENV_DIR="${SCRIPT_DIR}/$VENV_NAME"
