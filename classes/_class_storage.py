@@ -427,8 +427,10 @@ class _storage():
 #!   ##################################################
 #!   ##########       TABLE MANAGEMENT       ##########
 #!   ##################################################
-    async def validate_connection_string(self):
-        async with TableServiceClient.from_connection_string(self.connection_string) as table_service_client:
+    async def validate_connection_string(self, connection_string=None):
+        if connection_string is None or connection_string == "":
+            connection_string = self.transaction_pf_con_string
+        async with TableServiceClient.from_connection_string(connection_string) as table_service_client:
             try:
                 table_list = await self.get_list_of_tables()
                 if isinstance(table_list, list):
@@ -438,8 +440,10 @@ class _storage():
             except: 
                 return False
     
-    async def get_tables_names_as_markdown(self):
-        async with TableServiceClient.from_connection_string(self.connection_string) as table_service_client:
+    async def get_tables_names_as_markdown(self, connection_string=None):
+        if connection_string is None or connection_string == "":
+            connection_string = self.transaction_pf_con_string
+        async with TableServiceClient.from_connection_string(connection_string) as table_service_client:
             try:
                 table_list = await self.get_list_of_tables()
                 if isinstance(table_list, list):
@@ -450,9 +454,11 @@ class _storage():
             except Exception as e: 
                 return f":red[ERROR: {e}]"
     
-    async def get_list_of_tables(self):
+    async def get_list_of_tables(self, connection_string=None):
+        if connection_string is None or connection_string == "":
+            connection_string = self.transaction_pf_con_string
         # This method uses a connection string to create the TableServiceClient
-        async with TableServiceClient.from_connection_string(self.connection_string,) as table_service:
+        async with TableServiceClient.from_connection_string(connection_string,) as table_service:
             table_list = []
             async for table in table_service.list_tables():
                 table_list.append(table.name)

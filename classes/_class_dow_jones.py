@@ -31,7 +31,7 @@ from azure.data.tables.aio import TableClient
 from azure.storage.blob.aio import BlobServiceClient, BlobClient, ContainerClient
 from azure.core.exceptions import ResourceExistsError, HttpResponseError
 from azure.data.tables import UpdateMode
-from _class_storage import _storage as storage
+from _class_storage import classes._storage as storage
 from _class_storage import PsqlSimpleStorage as bmm
 
 from dotenv import load_dotenv

@@ -41,7 +41,7 @@ def set_up_page(page_title_text="[TITLE NEEDED FOR PAGE]", jbi_or_cfy="jbi", lig
     def display_dj_connection_status():
         
         def get_new_token():    
-            import _class_dow_jones as dj
+            import classes._class_dow_jones as dj
             if st.session_state.djsession is not None:
                 DJ_Session = st.session_state.djsession
             else:
@@ -186,7 +186,7 @@ def display_dj_search_results(simple_search_string = "", search_date_range="Last
                                 break  
     
     def execute_search():
-        import _class_dow_jones as dj
+        import classes._class_dow_jones as dj
         import asyncio
         DJ_Session = dj.DJSearch()
         search_results = asyncio.run(DJ_Session.search_async(

@@ -16,7 +16,7 @@ import imagehash
 import requests
 from io import BytesIO
 
-from classes import _class_storage as azstr
+from classes import classes._class_storage as azstr
 
 yr = YouRetriever()
 
