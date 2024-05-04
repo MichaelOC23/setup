@@ -47,63 +47,22 @@ fi
 
 #Key Folder Locations for python scripts and projects
 export CODE_FOLDER_PATH="${HOME}/code"                                       # "#Key Folder Locations THESE MUST BE CORRECT"
-export VSCODE_FOLDER_PATH="${CODE_FOLDER_PATH}/vscode"                       # "#Key Folder Locations THESE MUST BE CORRECT"
-export STABLE_FOLDER_PATH="${CODE_FOLDER_PATH}/.stable"                      # "#Key Folder Locations THESE MUST BE CORRECT"
-export PRODUCT_FOLDER_PATH="${CODE_FOLDER_PATH}/product-tools"               # "#Key Folder Locations THESE MUST BE CORRECT"
-export COMMUNIFY_FOLDER_PATH="${CODE_FOLDER_PATH}/communify"                 # "#Key Folder Locations THESE MUST BE CORRECT"
-export COMMUNIFY_SHARED_FOLDER_PATH="${CODE_FOLDER_PATH}/communify/shared"   # "#Key Folder Locations THESE MUST BE CORRECT"
 export CODE_ADMIN_FOLDER_PATH="${CODE_FOLDER_PATH}/code-admin"               # "#Key Folder Locations THESE MUST BE CORRECT"
 export PERSONAL_EXPENSES_FOLDER_PATH="${CODE_FOLDER_PATH}/personal-expenses" # "#Key Folder Locations THESE MUST BE CORRECT"
-export DOWJONES_CLASSES_FOLDER_PATH="${CODE_FOLDER_PATH}/dow_jones_service/classes"
-export PYTHONPATH="${DOWJONES_CLASSES_FOLDER_PATH}:$PYTHONPATH"
+export PYTHONPATH="${HOME}/.jbi/classes":$PYTHONPATH"
 
-#KEY IO Folder Locations
-export IO_FOLDER_PATH="${HOME}/Library/Mobile Documents/com~apple~CloudDocs/jbi" # "File in-out temp folder (general)
-export COMMUNIFY_IO_FOLDER_PATH="${IO_FOLDER_PATH}/communify"                    # "File in-out temp folder (communify)
-export NOTES_IO_FOLDER_PATH="${IO_FOLDER_PATH}/notes"                            # "File in-out temp folder (Notes)
-export AUDIO_IO_FOLDER_PATH="${IO_FOLDER_PATH}/audio"                            # "File in-out temp folder (Audio)
-export IMAGES_IO_FOLDER_PATH="${IO_FOLDER_PATH}/images"                          # "File in-out temp folder (Images)
-export TEMP_IO_FOLDER_PATH="${IO_FOLDER_PATH}/temp"                              # "File in-out temp folder (Temp)
-export TRANSCRIPTIONS_IO_FOLDER_PATH="${IO_FOLDER_PATH}/transcriptions"          # "File in-out temp folder (Transcriptions)
-export SCRAPED_CONTENT_IO_FOLDER_PATH="${IO_FOLDER_PATH}/scraped-content"        # "File in-out temp folder (Scraped Content from Websites)
-export LOGS_IO_FOLDER_PATH="${IO_FOLDER_PATH}/logs"                              # "File in-out temp folder (Logs)
-export PROMPTS_IO_FOLDER_PATH="${COMMUNIFY_FOLDER_PATH}/prompts"                 # "File in-out temp folder (Prompts)
-export LLM_IO_FOLDER_PATH="${IO_FOLDER_PATH}/llm"                                # "File in-out temp folder (Large Language Models)
-export EMAIL_IO_FOLDER_PATH="${IO_FOLDER_PATH}/email"                            # "File in-out temp folder (Email)
-export PERSONAL_EXPENSES_IO_FOLDER_PATH="${IO_FOLDER_PATH}/personal-expenses"    # "File in-out temp folder (Personal Expenses)
-export DOWJONES_IO_FOLDER_PATH="${IO_FOLDER_PATH}/dowjones"                      # "File in-out temp folder (Large Language Models)
-
-#Ensure key IO directories exist
-mkdir -p ${IO_FOLDER_PATH}
-mkdir -p ${COMMUNIFY_IO_FOLDER_PATH}
-mkdir -p ${NOTES_IO_FOLDER_PATH}
-mkdir -p ${AUDIO_IO_FOLDER_PATH}
-mkdir -p ${IMAGES_IO_FOLDER_PATH}
-mkdir -p ${TEMP_IO_FOLDER_PATH}
-mkdir -p ${TRANSCRIPTIONS_IO_FOLDER_PATH}
-mkdir -p ${SCRAPED_CONTENT_IO_FOLDER_PATH}
-mkdir -p ${LOGS_IO_FOLDER_PATH}
-mkdir -p ${PROMPTS_IO_FOLDER_PATH}
-mkdir -p ${LLM_IO_FOLDER_PATH}
-mkdir -p ${DOWJONES_IO_FOLDER_PATH}
-mkdir -p ${EMAIL_IO_FOLDER_PATH}
-mkdir -p ${PERSONAL_EXPENSES_IO_FOLDER_PATH}
-mkdir -p ${DOWJONES_IO_FOLDER_PATH}
 
 # PATH export
 export PATH="/System/Cryptexes/App/usr/bin:/usr/bin:/bin" # Standard Path
 export PATH="${PATH}:/usr/sbin:/sbin:/usr/local/bin"      # Standard Path
 
 # Add additional locations to the PATH
+export PATH="${PYTHONPATH}:${HOME}/.jbi/classes"
 export PATH="${PATH}:/opt/homebrew/bin:/opt/homebrew/sbin" # Homebrew
 export PATH="${PATH}:/Applications/geckodriver*"           # For Scraping
 export PATH="${PATH}:/opt/homebrew/bin/jupyter-lab"        # For Jupier Lab
-export PATH="${PATH}:${STABLE_FOLDER_PATH}"                # This allows easy running of either stable or communify code
-export PATH="${PATH}:${COMMUNIFY_FOLDER_PATH}"             # This allows easy running of either stable or communify code
-export PATH="${PATH}:${COMMUNIFY_SHARED_FOLDER_PATH}"      # This allows all the files in main communify folder to include shared libraries in the shared folder
-export PATH="${PATH}:${CODE_ADMIN_FOLDER_PATH}"            # This is mostly a dev area for script. It's nice to be able to run them without typing the full path.
+export PATH="${PATH}:${HOME}/.jbi/classes"            # This is mostly a dev area for script. It's nice to be able to run them without typing the full path.
 export PATH="${PATH}:${PERSONAL_EXPENSES_FOLDER_PATH}"     # There are a number of libraries here that need their own folder to not lose track of them
-export PATH="${PATH}:${DOWJONES_CLASSES_FOLDER_PATH}"
 
 # Set the default editor to Visual Studio Code
 export EDITOR="code"
@@ -154,8 +113,11 @@ export AZURE_PROJECTS_ENDPOINT="https://dev.azure.com/${AZURE_DEVOPS_ORG}/_apis/
 export PATH="/opt/homebrew/bin:$PATH"
 alias python='python3'
 alias pip='pip3'
-alias llmstart="cd ${COMMUNIFY_FOLDER_PATH} && llm_launch.sh"
-alias llmstop="cd ${COMMUNIFY_FOLDER_PATH} && llm_launch.sh stop"
+# alias python="/opt/homebrew/bin/python3.12"
+# alias python3="/opt/homebrew/bin/python3.12"
+# alias pip="/opt/homebrew/bin/pip3"
+# alias llmstart="cd ${COMMUNIFY_FOLDER_PATH} && llm_launch.sh"
+# alias llmstop="cd ${COMMUNIFY_FOLDER_PATH} && llm_launch.sh stop"
 
 # Get the ngrok public URL
 # Make the curl request and use jq to parse the JSON response, extracting the public_url
@@ -189,7 +151,3 @@ if [ "${LOG_LEVEL}" = "VERBOSE" ]; then
     env
     echo -e "\033[0m"
 fi
-
-# alias python="/opt/homebrew/bin/python3.12"
-# alias python3="/opt/homebrew/bin/python3.12"
-# alias pip="/opt/homebrew/bin/pip3"
