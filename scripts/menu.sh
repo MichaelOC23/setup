@@ -46,19 +46,19 @@ show_menu() {
     echo -e "Please choose one of the following options (enter the number):\n"
     echo -e "|-------------------------------------------------------------|${NC}\n"
 
-    echo -e "${GREEN}0) Commit the current repository${NC}\n"
-    echo -e "${YELLOW}1) Commit and Push All: VSCODE .JBI COMMUNIFY${NC}\n"
-    echo -e "${PINK}2) Start / Restart Stable Tools${NC}\n"
-    echo -e "${LIGHTBLUE}3) Start Doccano${NC}\n"
-    echo -e "${YELLOW}4) Launch Communify${NC}\n"
-    echo -e "${PURPLE}5) Display Color Palette${NC}\n"
-    echo -e "${GREEN}6) Grant terminal access to iCloud Drive${NC} \n"
-    echo -e "${YELLOW}7) Restart Postgres 14${NC}\n"
-    echo -e "${GREEN}8) Start / Restart LLMs and Chat Apps ${NC}\n"
-    echo -e "${ORANGE}9) Shut Down LLMs and Chat Apps ${NC}\n"
-    echo -e "${RED_U}10) Create/replace .jbi symbolic links${NC}\n"
-    echo -e "${RED_U}101) Generate an Encryption Key${NC}\n"
-    echo -e "${RED_U}1977) Deinitialize vscode${NC}\n"
+    echo -e "${GREEN}0) Commit the current repository${NC}"
+    echo -e "${YELLOW}1) Commit and Push All: VSCODE .JBI COMMUNIFY${NC}"
+    echo -e "${PINK}2) OPEN MENU ${NC}"
+    echo -e "${LIGHTBLUE}3) OPEN MENU ${NC}"
+    echo -e "${YELLOW}4) Launch MyTech ${NC}"
+    echo -e "${PURPLE}5) Display Color Palette${NC}"
+    echo -e "${GREEN}6) Grant terminal access to iCloud Drive${NC} "
+    echo -e "${YELLOW}7) Restart Postgres 14${NC}"
+    echo -e "${GREEN}8) OPEN MENU ${NC}"
+    echo -e "${ORANGE}9) OPEN MENU ${NC}"
+    echo -e "${RED_U}10) Create/replace .jbi symbolic links${NC}"
+    echo -e "${RED_U}101) Generate an Encryption Key${NC}"
+    echo -e "${RED_U}1977) Deinitialize vscode${NC}"
     echo -e "${RED_U}2008) DISCARD all changes and REPLACE with latest version from Azure Devops${NC}\n"
 
 }
@@ -124,60 +124,61 @@ read_choice() {
         ;;
 
     2)
-        echo "${RED_U}Shutdown, Delete, Pull, Reinstall and Start Stable Tools${NC}"
-        if confirm "Do you want to proceed?"; then
-            # Check if app.py is running
-            APP_PY_PID=$(pgrep -f "streamlit run 000_Communify_Home")
+        # echo "${RED_U}Shutdown, Delete, Pull, Reinstall and Start Stable Tools${NC}"
+        # if confirm "Do you want to proceed?"; then
+        #     # Check if app.py is running
+        #     APP_PY_PID=$(pgrep -f "streamlit run 000_Communify_Home")
 
-            if [ -n "$APP_PY_PID" ]; then
-                echo "app.py is running. Stopping it..."
-                kill $APP_PY_PID
-            fi
+        #     if [ -n "$APP_PY_PID" ]; then
+        #         echo "app.py is running. Stopping it..."
+        #         kill $APP_PY_PID
+        #     fi
 
-            # Reinstall the Environment
-            STABLE_DIR="$HOME/code/.stable"
-            rm -rf $STABLE_DIR
-            mkdir -p $STABLE_DIR
+        #     # Reinstall the Environment
+        #     STABLE_DIR="$HOME/code/.stable"
+        #     rm -rf $STABLE_DIR
+        #     mkdir -p $STABLE_DIR
 
-            cd $STABLE_DIR
+        #     cd $STABLE_DIR
 
-            git clone "https://michael:$AZURE_DEVOPS_PAT@dev.azure.com/$AZURE_DEVOPS_ORG/product-development/_git/communify"
-            cd communify
-            ./env_setup.sh
+        #     git clone "https://michael:$AZURE_DEVOPS_PAT@dev.azure.com/$AZURE_DEVOPS_ORG/product-development/_git/communify"
+        #     cd communify
+        #     ./env_setup.sh
 
-            cd $STABLE_DIR
+        #     cd $STABLE_DIR
 
-            git clone "https://michael:$AZURE_DEVOPS_PAT@dev.azure.com/$AZURE_DEVOPS_ORG/product-development/_git/product-tools"
-            cd product-tools
-            ./env_setup.sh
+        #     git clone "https://michael:$AZURE_DEVOPS_PAT@dev.azure.com/$AZURE_DEVOPS_ORG/product-development/_git/product-tools"
+        #     cd product-tools
+        #     ./env_setup.sh
 
-            # Relaunch app.py with streamlit
-            echo "Relaunching app.py with streamlit..."
-            source "$HOME/code/.stable/communify/communify_venv/bin/activate" && streamlit run "$HOME/code/.stable/communify/000_Communify_Home.py"
-        else
-            echo "Returning to menu."
-        fi
+        #     # Relaunch app.py with streamlit
+        #     echo "Relaunching app.py with streamlit..."
+        #     source "$HOME/code/.stable/communify/communify_venv/bin/activate" && streamlit run "$HOME/code/.stable/communify/000_Communify_Home.py"
+        # else
+        #     echo "Returning to menu."
+        # fi
+        exit 0
         ;;
 
     3)
-        echo "Starting Doccano"
-        # Activate the virtual environment
-        source "$VSCODE_PATH/doccano/doccano_venv/bin/activate"
+        echo "Open"
+        # # Activate the virtual environment
+        # source "$VSCODE_PATH/doccano/doccano_venv/bin/activate"
 
-        # Start the doccano task in the background
-        doccano task &
-        echo "Doccano task started. Waiting for 3 seconds..."
-        sleep 3
+        # # Start the doccano task in the background
+        # doccano task &
+        # echo "Doccano task started. Waiting for 3 seconds..."
+        # sleep 3
 
-        # Start the doccano webserver on port 8000 in the background
-        doccano webserver --port 8000 &
-        echo "Starting Doccano webserver. Waiting for 3 seconds..."
-        sleep 3
+        # # Start the doccano webserver on port 8000 in the background
+        # doccano webserver --port 8000 &
+        # echo "Starting Doccano webserver. Waiting for 3 seconds..."
+        # sleep 3
 
-        # Optional: add a wait command if you want the script to wait for these processes to finish
-        # wait
+        # # Optional: add a wait command if you want the script to wait for these processes to finish
+        # # wait
 
-        echo "Doccano tasks started."
+        # echo "Doccano tasks started."
         ;;
 
     4)
@@ -201,6 +202,7 @@ read_choice() {
         echo -e "${PINK_U}The Quick Brown Fox Jumped Over the Lazy Dog ${NC}"
         echo -e "${PINK_BLINK}The Quick Brown Fox Jumped Over the Lazy Dog ${NC}"
         echo -e "${LIGHTBLUE}The Quick Brown Fox Jumped Over the Lazy Dog ${NC}"
+        exit 0
 
         ;;
     6)
@@ -216,6 +218,7 @@ read_choice() {
         echo "Restarting Postgres 14"
         brew services restart postgresql@14
         echo "Postgres 14 restarted"
+        exit 0
         ;;
     8)
         echo "Start / Restart LLMs and Chat Apps"
@@ -241,6 +244,7 @@ read_choice() {
         git remote add origin https://dev.azure.com/justbuildit/$PROJECT_NAME/_git/$REPO_NAME # Add the Azure DevOps repository as a remote to your local repository
         git push -u origin --all                                                              # Push your code to the Azure DevOps repository
         echo "Repository '$REPO_NAME' initialized and pushed to Azure DevOps."
+        exit 0
         ;;
 
     101)
@@ -262,7 +266,7 @@ read_choice() {
             echo "Deinitialization of $VSCODE_FOLDER_PATH complete."
         else
             echo "Returning to menu."
-
+            exit 0
         fi
         ;;
 
@@ -282,7 +286,7 @@ read_choice() {
         else
             echo "Returning to menu."
         fi
-
+        exit 0
         ;;
     2009)
         echo "You chose Option 2009:"

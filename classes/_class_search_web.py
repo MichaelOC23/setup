@@ -16,7 +16,7 @@ import imagehash
 import requests
 from io import BytesIO
 
-from classes import classes._class_storage as azstr
+from classes import _class_storage as azstr
 
 yr = YouRetriever()
 
@@ -471,7 +471,7 @@ class Search:
                 print(f"Failed to send request: {e}")
 
         # Create and start a thread to make the request
-        thread = Thread(target=request_thread, args=(self.flask_url, params))
+        thread = threading.Thread(target=request_thread, args=(self.flask_url, params))
         thread.start()
 
 

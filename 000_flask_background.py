@@ -1,20 +1,17 @@
 
 from flask import Flask, request, jsonify
-# from httpx import get
-# from numpy import full, isin
 import time
-from classes import _class_search_web
 from io import StringIO
-from classes import _class_storage
 import requests
 from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
 import os
 import zipfile
-
-
 import csv
+
+from classes import _class_search_web
+from classes import _class_storage
 
 #Deepgram
 from dotenv import load_dotenv
@@ -27,6 +24,8 @@ from deepgram import (
     PrerecordedOptions,
     Microphone,)
 load_dotenv()
+
+
 # We will collect the is_final=true messages here so we can use them when the person finishes speaking
 is_finals = []
 deepgram_api_key = os.getenv("DEEPGRAM_API_KEY")
@@ -36,6 +35,7 @@ app = Flask(__name__)
 
 data_directory = os.path.join('data', 'nasdaq')
 log_directory = os.path.join(data_directory, 'logs')
+
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
     

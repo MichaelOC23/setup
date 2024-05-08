@@ -1,23 +1,14 @@
 
+
 import streamlit as st
 import uuid
 import os
-import asyncio
-from openai import OpenAI
-from typing import List
-from pathlib import Path
-import pandas as pd
+import nltk  
+import base64
 
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from datetime import date
 
-from langchain.schema import StrOutputParser
-from langchain_community.document_loaders import (PyMuPDFLoader,)
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores.chroma import Chroma
-from langchain.indexes import SQLRecordManager, index
-from langchain.schema import Document
-from langchain.schema.runnable import Runnable, RunnablePassthrough, RunnableConfig
-from langchain.callbacks.base import BaseCallbackHandler
+from langchain_openai import OpenAIEmbeddings
 
 def initialize_session_state_variable(variable_name, variable_value):
     if variable_name not in st.session_state:
@@ -252,28 +243,279 @@ def display_dj_search_results(simple_search_string = "", search_date_range="Last
                         if html is not None and html != "":
                             article_space.markdown(html, unsafe_allow_html=True)     
     
-    # if show_chatbot and st.session_state.show_results:
-    #     if not st.session_state.chat_has_started:
-    #         asyncio.run(on_chat_start(prompt="You are an always-helpful and cheerful AI Assistant.", pdf_storage_path=None, api_response=None, chunk_size=1024, chunk_overlap=50))
-            
-    #     def show_simple_chatbot():
-    #         viewer_col.subheader('Chatbot', divider='gray')
+   
 
-    #         # Set OpenAI API key from Streamlit secrets
-    #         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    #         if "messages" not in st.session_state:
-    #             st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
-
-    #         for msg in st.session_state.messages:
-    #             viewer_col.chat_message(msg["role"]).write(msg["content"])
-
-    #         if prompt := viewer_col.chat_input():
-    #             st.session_state.messages.append({"role": "user", "content": prompt})
-    #             response = client.chat.completions.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
-    #             msg = response.choices[0].message.content
-    #             st.session_state.messages.append({"role": "assistant", "content": msg})
-    #             viewer_col.chat_message("assistant").write(msg)
-    #             viewer_col.chat_message("user").write(prompt)
-    #     show_simple_chatbot()
+class research_libaray():
+    def __init__(self ):
+        self.azure_storage_connection_string = os.environ.get('PERSONAL_STORAGE_CONNECTION_STRING', 'No Key or Connection String found')
+        # self.local_chromadb = None
+        self.CACHE_DIR = "cache"
+        if not os.path.exists(self.CACHE_DIR):
+            os.makedirs(f"{self.CACHE_DIR}/")
         
+        self.sec_bert_base_model = "nlpaueb/sec-bert-base"
+        self.general_model = "roberta-base"
+        self.supported_file_types = ["pdf", "txt", "mp3", "mp4", 'mpeg', 'doc', 'docx', "txt"]
+        self.model_dict = {
+            "Finance": self.sec_bert_base_model, 
+            "General": self.general_model,
+            "ChatGPT-3.5": "gpt-3.5-turbo",
+            "ChatGPT-4": "gpt-4-turbo",
+            
+            }
+        
+        self.sec_bert_base_description = """
+            ### *Model*: nlpaueb/sec-bert-base 
+            #### Focused on financial and technical text data 
+
+            ##### Strengths:
+            - *Domain-Specific Pre-Training:* This BERT model was pre-trained specifically on a large corpus of financial documents (260,773 SEC 10-K filings), which should allow it to better capture domain-specific terminology, jargon, and nuances compared to general pre-trained models.
+            - *Masked Language Modeling:* The examples show that the model performs well on financial text for masked language modeling tasks, which could be useful for tasks like named entity recognition or text summarization that you mentioned needing.
+            - *Flexible Base Model:* Being a variant of BERT-base, this model can potentially be fine-tuned or adapted for various downstream tasks beyond just language modeling.
+            - *Open-Source:* Like the previous model, this is also an open-source model available for free use.
+
+            ##### Weaknesses:
+            - Limited to Language Modeling: While the model shows strong performance on financial language modeling, it may still need task-specific fine-tuning for your use cases like summarization and named entity recognition.
+            - Quantitative Evaluation Missing: The model card doesn't provide quantitative evaluation metrics for summarization or NER tasks specifically, so you may need to evaluate it yourself on your data."""
+
+    # Cache uploaded files
+    def cache_files(self, files) -> list[str]:
+        filepaths = []
+        for file in files:
+            # Determine the file extension from the mime type
+            ext = file.type.split("/")[-1]
+            if ext == "plain":  # Handle text/plain mime type
+                ext = "txt"
+            elif ext in ["vnd.openxmlformats-officedocument.wordprocessingml.document", "vnd.ms-word"]:
+                ext = "docx"  # or "doc" depending on your needs
+            if ext not in self.supported_file_types:
+                continue
+            
+            filepath = f"{self.CACHE_DIR}/{file.name}"
+            
+            with open(filepath, "wb") as f:
+                f.write(file.getvalue())
+            
+            if ext in ["mp3", "mp4"]:
+                pass
+                # filepath = transcribe_audio_video(filepath)
+            filepaths.append(filepath)
+        
+        # st.sidebar.write("Uploaded files", filepaths)  # Debug statement
+        
+        with st.sidebar:
+            with st.expander("Uploaded Files"):
+                filepaths_pretty = "\n".join(f"- {filepath}" for filepath in filepaths)
+                st.markdown(f"{filepaths_pretty}")
+        return filepaths
+     
+    def display_file_uploader(self, **kwargs):
+        files = st.file_uploader(
+            label=f"Upload files", type=self.supported_file_types, **kwargs
+        )
+        if not files:
+            st.info("Please upload documents to get started.")
+            return []
+        return self.cache_files(files)
+    
+    def create_embeddings(self, text, title, description, file_type="General", as_of_date=date.today()):
+        
+        
+        
+        def get_embeddings(file_type="General"):
+            """Generates text embeddings using a type-specific Transformer model.
+
+            Args:
+                text (str): The text to embed.
+                title (str): Title associated with the text.
+                description (str): Description associated with the text.
+                type (str, optional): Type of embedding ('finance' or 'general'). Defaults to 'finance'.
+                as_of_date (date, optional): Effective date of the embedding. Defaults to today's date.
+
+            Returns:
+                dict: A dictionary containing the embedding and metadata.
+            """
+
+            from transformers import AutoTokenizer, AutoModel
+            from transformers import pipeline
+            
+            
+            embeddings = None
+            
+            model = self.model_dict.get(file_type, self.general_model)
+            
+            def process_text_in_chunks(text, embedder, max_chunk_size=500):
+            
+                chunks = split_text_into_chunks(text, max_chunk_size)  # You'll need to implement this splitting function
+                embeddings = []
+                for chunk in chunks:
+                    chunk_embeddings = embedder(chunk)
+                    embeddings.append(chunk_embeddings)
+                return embeddings 
+            
+            
+
+            def split_text_into_chunks(text, max_chunk_size=100):
+                """Splits text into chunks aiming for a target size, attempting to preserve sentences.
+
+                Args:
+                    text: The input text string.
+                    max_chunk_size:  The approximate maximum number of tokens per chunk.
+
+                Returns:
+                    A list of text chunks.
+                """
+
+                nltk.download('punkt', quiet=True)  # Download sentence tokenizer if not present
+                sentences = nltk.sent_tokenize(text)
+                chunks = []
+                current_chunk = []
+                current_chunk_size = 0
+
+                for sentence in sentences:
+                    words = nltk.word_tokenize(sentence)  
+                    current_chunk_size += len(words)
+
+                    if current_chunk_size <= max_chunk_size:
+                        current_chunk.append(sentence)
+                    else:
+                        # Chunk is getting too big, save it and start a new one
+                        chunks.append(' '.join(current_chunk))  
+                        current_chunk = [sentence]  
+                        current_chunk_size = len(words)  
+
+                # Add the last chunk (if any)
+                if current_chunk:
+                    chunks.append(' '.join(current_chunk))
+
+                return chunks
+            
+
+
+            
+            if file_type == "Finance":
+                tokenizer = AutoTokenizer.from_pretrained(model)
+                model = AutoModel.from_pretrained(model)
+                embedder = pipeline('feature-extraction', model=model, tokenizer=tokenizer)
+                embeddings = process_text_in_chunks(text, embedder)
+                
+            
+            
+            elif file_type == "General":
+                tokenizer = AutoTokenizer.from_pretrained(model)
+                model = AutoModel.from_pretrained(model)
+                embedder = pipeline('feature-extraction', model=model, tokenizer=tokenizer)
+                embeddings = process_text_in_chunks(text, embedder)
+            
+            
+            elif file_type == "ChatGPT-3.5":
+                openai = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
+                embeddings = openai.embed(text, model=model)
+        
+            elif file_type == "ChatGPT-4":
+                openai = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
+                embeddings = openai.embed(text, model=model)
+                
+            else:
+                #Raise an error
+                return "Invalid type. Please choose either 'finance' or 'general' as the type."
+            
+
+            return embeddings
+        
+        def sanitize_key(key, strip_before_encoding=True):
+            """
+            Encodes the key into a base64 string to avoid disallowed characters.
+            The base64 string is safe for Azure Table Storage keys.
+            """
+            if key is None:
+                return None
+            if strip_before_encoding:
+                key = key.strip()
+            # Ensure the key is in bytes, then encode
+            key_bytes = key.encode('utf-8')
+            encoded_key = base64.b64encode(key_bytes).decode('utf-8')
+            # Replace base64 characters that are not allowed in Azure Table keys
+            safe_encoded_key = encoded_key.replace('+', '-').replace('/', '_')
+            
+            return safe_encoded_key
+        
+        
+        def format_embeddings(embeddings, text, title, description, file_type="General", as_of_date=date.today()):
+            import torch
+            import numpy as np
+            # Detach from computational graph (optional for memory efficiency)
+            # Check if embeddings is a tensor and detach if necessary
+            if isinstance(embeddings, torch.Tensor):
+                embeddings = embeddings.detach()
+            
+            # Convert to NumPy array if it's still a tensor
+            if isinstance(embeddings, torch.Tensor):
+                embeddings = embeddings.cpu().numpy()
+            
+            elif isinstance(embeddings, list):  # Assuming embeddings from OpenAI are in list format
+                embeddings = np.array(embeddings)  # Convert list to NumPy array
+
+            
+            #create a unique date-time key with the format: YYYY.MM.DD.HH.MM.SS.MS
+            date_time_key = date.today().strftime("%Y.%m.%d.%H.%M.%S.%f")
+            as_of_date = as_of_date.strftime("%Y.%m.%d")
+
+            return_dict = {}
+            if isinstance(embeddings, np.ndarray):
+                embeddings = embeddings.tobytes()
+                
+            row_key_value = sanitize_key(f"{title}_{date_time_key}")
+            
+            return_dict = {  "PartitionKey": date_time_key,
+                                            "RowKey": row_key_value,
+                                            "Title": title,
+                                            "Description": description,
+                                            "EmbeddingModel": file_type,
+                                            "EffectiveDate": as_of_date,
+                                            "TextExtraction": text,
+                                            "EmbeddingsBinary_blob": embeddings,
+                                            }
+            
+            return return_dict
+        
+        embeddings = get_embeddings(file_type)
+        formatted_embeddings = format_embeddings(embeddings, text, title, description, file_type, as_of_date)
+        
+        return formatted_embeddings
+    
+    def get_embeddings_from_user_files(self):
+        
+        initialize_session_state_variable("model_type_value", self.model_dict["Finance"])
+        initialize_session_state_variable("temperature", .1)
+        
+        with st.sidebar:
+            with st.expander("Advanced Settings"):
+                
+                model_type_value = st.radio("Select Model Type", list(self.model_dict.keys()))
+                if model_type_value:
+                    st.session_state['model_type_value'] = model_type_value
+                
+                st.session_state['temperature'] = st.number_input("Enter Temperature", help="It determines how creative the model should be", min_value=0.0,max_value=1.0, value=0.1)
+                
+
+            # Upload PDFs, DOCs, TXTs, MP3s, and MP4s
+            documents = []
+            new_documents = self.display_file_uploader(accept_multiple_files=True)
+            if new_documents and len(new_documents) > 0:
+                documents.extend(new_documents) 
+            
+            title = "123"
+            description = "123"
+            as_of_date = date.today()
+            
+            embeddings_list = []
+            if len(documents) > 0:
+                for file_path in documents:
+                    with open(file_path, "r") as file:
+                        text = file.read()
+
+                    embeddings = self.create_embeddings(text, file.name, f"{description[:100]}...", "General", as_of_date)
+                    embeddings_list.append(embeddings)
+                return embeddings_list
+              

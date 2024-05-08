@@ -698,13 +698,6 @@ class extract_text_from_file:
             with open(self.all_extracts_path, 'w') as f:
                 f.write(json.dumps(self.all_extracts_dict, indent=4))
                 f.close()
-        
-                
-        
-
-    
-
-
 
 if __name__ == '__main__':
     pass

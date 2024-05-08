@@ -267,24 +267,6 @@ class PsqlSimpleStorage():
         
         return True
     
-    # def get_uploaded_file_data(uploaded_file):
-    #     file_extension = uploaded_file.type.split('/')[-1].lower()
-    #     df = None 
-    #     if file_extension == 'csv':
-    #         df = pd.read_csv(uploaded_file)
-    #     elif file_extension == 'xls' or file_extension == 'xlsx':
-    #         df = pd.read_excel(uploaded_file)
-    #     elif file_extension == 'json':
-    #         df = pd.read_json(uploaded_file)
-    #     elif file_extension == 'html':
-    #         df = pd.read_html(uploaded_file)
-    #     else:
-    #         st.error("Unsupported file type. Please upload a CSV, Excel, HTML, or JSON file.")
-    #     return df
-
-        
-
-
 
 EntityType = Union[TableEntity, Mapping[str, Any]]
 OperationType = Union[TransactionOperation, str]
@@ -294,15 +276,15 @@ class _storage():
     def __init__(self ):
         # self.account_name="productstoragecommunify"
         # self.endpoint_suffix = "core.windows.net"
-        self.connection_string = os.environ.get('PRODUCTSTORAGE_TABLE_CONNECTION_STRING', 'No Key or Connection String found')
-        self.transaction_pf_con_string = os.environ.get('PERSONAL_STORAGE_TABLE_CONNECTION_STRING_PF', 'No Key or Connection String found')
+        self.connection_string = os.environ.get('PERSONAL_STORAGE_CONNECTION_STRING', 'No Key or Connection String found')
+        self.transaction_pf_con_string = os.environ.get('PERSONAL_STORAGE_CONNECTION_STRING', 'No Key or Connection String found')
         self.unique_id = uuid.uuid4()
         self.log_container_name = "devcommunifylogs"
         self.content_container_name = "content"
         self.test_container_name = "testcontainer"
         self.parameter_table_name = "devparameters"
         self.parameter_partition_key = "parameter"
-        self.access_token_table_name_and_keys = "accesstoken"
+        # self.access_token_table_name_and_keys = "accesstoken"
         self.search_results_table_name = "searchresults"
         self.url_results_table_name = "urlcontent"
         self.table_field_data_extension = "table-field-data-extension"
@@ -619,8 +601,13 @@ class _storage():
                 for key in entity.keys():
                     if "_blob" in key:
                         # If the value in the field is empty, skip it
-                        if entity[key] == "" or entity[key] == None:
+                        blob_value = entity.get(key, None)  
+                        if blob_value is None:
                             continue
+                        # if not isinstance(blob_value, list) and blob_value == "":
+                        #     continue
+                        # if (isinstance(blob_value, list) and len(blob_value) == 0):
+                        #     continue
                         # If it's not empty, then create a new unique key for the blob field
                         blob_field_key = f"{key}|{self.create_unique_blob_name()}"        
                         # Put the value of the field in the blob_extension dictionary
@@ -943,7 +930,7 @@ class _storage():
 if __name__ == "__main__":
     table = "public.bmmdicts"
     storage = PsqlSimpleStorage()
-    storage.delete_all_tables()
+    # storage.delete_all_tables()
     storage.setup_bmm_tables(table)
     
     async def test():
