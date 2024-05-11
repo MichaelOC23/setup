@@ -67,7 +67,7 @@ else
     exit 1
 fi
 
-#Archvie the current .jbi folder if there is one
+#Archvie the current .mytech folder if there is one
 
 #Custom hidden root folder for JBI machines to install software
 HOME_DIR="${HOME}"

@@ -2,7 +2,7 @@ import os
 import json
 import uuid
 import asyncio
-import classes._class_storage as Storage
+import _class_storage as Storage
 
 class BusinessModel():
     def __init__(self):

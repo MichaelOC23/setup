@@ -93,4 +93,4 @@ pip freeze >".req_backup/requirements_freeze_$(date +%Y%m%d_%H%M%S).txt" || {
 }
 echo -e "\033[1;32mFreezing requirements successful\033[0m"
 
-echo -e "\033[5;32mInstallation complete\033[0m"
+echo -e "\033[5;34m *** INSTALLATION COMPLETE *** \033[0m"

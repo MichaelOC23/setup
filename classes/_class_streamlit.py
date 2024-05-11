@@ -4,7 +4,7 @@ from multiprocessing import process
 import streamlit as st
 import uuid
 import os
-import nltk  
+import nltk
 import base64
 
 from datetime import date

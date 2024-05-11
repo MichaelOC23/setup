@@ -22,20 +22,20 @@ ensure_process_stopped_by_name "Python"
 
 # Change to the directory where the code is located
 cd /Users/michasmi/.jbi/
+echo "Changed to the directory where the code is located."
 
 # Activate the virtual environment and set the FLASK_APP environment variable
 source /Users/michasmi/.jbi/jbi_venv/bin/activate
+echo "Activated the virtual environment."
 
 # Set the FLASK_APP environment variable (which is the path to the Flask app)
-export FLASK_APP=/Users/michasmi/.jbi/000_flask_background.py
+export FLASK_APP=/Users/michasmi/.jbi/classes/_flask_background.py
 
 # Run the Flask app in the background
 flask run --port 5005 &
+echo "Flask app running in the background."
 
 # Wait before resuming the script
-echo "Waiting for 8 seconds before resuming the script to make sure Flask is running."
-sleep 8 # Pause for 5 seconds
-
-## Resume the script and start the meeting by sending a POST request to the Flask app
-echo "Script resuming after the pause. Starting the Meeting."
-curl -X POST http://127.0.0.1:5005/ -d ''
+echo "Waiting for 3 seconds to test the app."
+sleep 3 # Pause for 5 seconds
+curl http://127.0.0.1:5005/isup

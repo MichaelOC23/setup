@@ -68,4 +68,5 @@ cp $REQUIREMENTS_FILE ".req_backup/requirements_raw_$(date +%Y%m%d_%H%M%S).txt"
 
 # ### Freeze the current state of packages
 pip freeze >".req_backup/requirements_freeze_$(date +%Y%m%d_%H%M%S).txt"
-echo "Installation complete"
+
+echo -e "\033[5;34m *** INSTALLATION COMPLETE *** \033[0m"
