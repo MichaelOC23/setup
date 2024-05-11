@@ -234,7 +234,7 @@ def startaudiorec():
         def on_message(self, result, **kwargs):
             global is_finals
             sentence = result.channel.alternatives[0].transcript
-            print(f"{result}")
+            print(f"{sentence}")
             if len(sentence) == 0:
                 return
             else:
@@ -249,13 +249,16 @@ def startaudiorec():
                 if result.speech_final:
                     utterance = ' '.join(is_finals)
                     print(f"Speech Final: {utterance}")
+                    with open('meeting.txt', 'a') as f:
+                        f.write(utterance)
                     is_finals = []
                 else:
                     # These are useful if you need real time captioning and update what the Interim Results produced
-                    print(f"Is Final: {sentence}")
+                    pass
             else:
+                pass
                 # These are useful if you need real time captioning of what is being spoken
-                print(f"Interim Results: {sentence}")
+                # print(f"Interim Results: {sentence}")
 
         def on_metadata(self, metadata, **kwargs):
             print(f"Deepgram Metadata: {metadata}")
@@ -291,16 +294,20 @@ def startaudiorec():
         options: LiveOptions = LiveOptions(
             model="nova-2",
             language="en-US",
+            
             # Apply smart formatting to the output
             smart_format=True,
+            
             # Raw audio format details
             encoding="linear16",
             channels=1,
             sample_rate=16000,
+            
             # To get UtteranceEnd, the following must be set:
             interim_results=True,
             utterance_end_ms="1000",
             vad_events=True,
+            
             # Time in milliseconds of silence to wait for before finalizing speech
             endpointing=300
         )
@@ -310,7 +317,6 @@ def startaudiorec():
             "no_delay": "true"
         }
 
-        print("\n\nPress Enter to stop recording...\n\n")
         if dg_connection.start(options, addons=addons) is False:
             print("Failed to connect to Deepgram")
             return

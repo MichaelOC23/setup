@@ -9,7 +9,7 @@ from pdfminer.layout import LTTextContainer, LTChar, LTRect, LTFigure
 
 #Office Documents
 from langchain_community.document_loaders import UnstructuredWordDocumentLoader
-from langchain.document_loaders import UnstructuredPowerPointLoader
+from langchain.document_loaders import UnstructuredPowerPointLoader, text
 from langchain_community.document_loaders import UnstructuredExcelLoader
 import langchain_core as core
 
@@ -40,6 +40,8 @@ import json
 import pytesseract
 from PIL import Image
 import cv2
+
+from datetime import datetime
 
 
 
@@ -207,6 +209,8 @@ class extract_text_from_file:
             pdf_text['by_element_type'] = {}
             for element_type in self.text_element_types:
                 pdf_text['by_element_type'][element_type] = []
+            
+            pdf_text['all_text'] = []
 
             return pdf_text
 
@@ -214,13 +218,17 @@ class extract_text_from_file:
             if element_dict.get('text', '') == '':
                 return pdf_text
             
+            pdf_text['all_text'].append(element_dict.get('text', ''))
+            
             #structure by_page
             page_str = element_dict['page']
             if element_dict['page'] not in pdf_text['by_page']:
                 pdf_text['by_page'][page_str] = []
             pdf_text['by_page'][page_str].append(element_dict)
+            
             #structure all_pages
             pdf_text['all_pages'].append(element_dict)
+            
             #structure useful/ignored
             pdf_text[element_dict['ignored_or_useful']].append(element_dict)
             
@@ -698,18 +706,30 @@ class extract_text_from_file:
             with open(self.all_extracts_path, 'w') as f:
                 f.write(json.dumps(self.all_extracts_dict, indent=4))
                 f.close()
+            
+            for key in self.all_extracts_dict.keys():
+                file_dict = self.all_extracts_dict[key]
+                if isinstance(file_dict, dict):
+                    all_text = file_dict.get('all_text', [])
+                    all_text = "\n".join(all_text)
+                    with open (f"{key}.txt", 'w') as f:
+                        f.write(all_text)
+                        f.close()
+            
 
 if __name__ == '__main__':
     pass
     
     # # pdf_path = 'example.pdf'
-    output_folder = '/Users/michasmi/Downloads/springdocs'
+    directory_path = '/Users/michasmi/Downloads/stp'
+    output_folder = directory_path
     ext_text = extract_text_from_file()
+    uid_string = datetime.now().strftime("%Y%m%d%H%M%S")
+
     
-    directory_path = output_folder
     # directory_path = '/Users/michasmi/code/dow_jones_service/assets/test-images'
     test_doc_list = [os.path.join(directory_path, filename) for filename in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, filename))]
-    ext_text.extract_json_from_files(test_doc_list, output_path='/Users/michasmi/code/dow_jones_service/assets/test-docs/alldata.json')
+    ext_text.extract_json_from_files(test_doc_list, output_path=f'{output_folder}/extract{uid_string}.json')
     
 
 

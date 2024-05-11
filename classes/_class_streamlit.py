@@ -1,5 +1,6 @@
 
 
+from multiprocessing import process
 import streamlit as st
 import uuid
 import os
@@ -402,15 +403,58 @@ class research_libaray():
             
             
             elif file_type == "General":
-                tokenizer = AutoTokenizer.from_pretrained(model)
-                model = AutoModel.from_pretrained(model)
-                embedder = pipeline('feature-extraction', model=model, tokenizer=tokenizer)
-                embeddings = process_text_in_chunks(text, embedder)
-            
+                from transformers import RobertaTokenizer, RobertaModel
+                import torch
+                import math
+
+                # Load the RoBERTa tokenizer and model
+                tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
+                model = RobertaModel.from_pretrained('roberta-base')
+
+                # Define the input text (a 2000-word article)
+                # text = "This is a 2000-word article. It contains a lot of text... [2000 words of text]"
+
+                # Split the text into chunks of maximum length 510 (512 - 2 for special tokens)
+                max_len = 510
+                chunks = [text[i:i+max_len] for i in range(0, len(text), max_len)]
+
+                # Initialize a tensor to store the embeddings
+                sentence_embeddings = torch.tensor([])
+                chunks_to_process = len(chunks)
+                processed_chunks = 0
+                chunking_progress = st.progress(processed_chunks / chunks_to_process, f"Processing chunk {processed_chunks + 1}/{chunks_to_process}")
+                # Process each chunk of text
+                for chunk in chunks:
+                    inputs = tokenizer(chunk, return_tensors="pt", padding=True, truncation=True, max_length=512)
+                    chunking_progress.progress((processed_chunks + 1) / chunks_to_process)
+                    
+
+                    # Move the input tensors to the GPU (if available)
+                    if torch.cuda.is_available():
+                        inputs = {k: v.cuda() for k, v in inputs.items()}
+
+                    # Get the embeddings from the RoBERTa model
+                    with torch.no_grad():
+                        outputs = model(**inputs)
+                        last_hidden_state = outputs.last_hidden_state
+
+                    # Get the chunk embeddings by taking the mean of the token embeddings
+                    chunk_embeddings = torch.mean(last_hidden_state, dim=1)
+
+                    # Concatenate the chunk embeddings to the sentence embeddings
+                    embeddings = torch.cat((sentence_embeddings, chunk_embeddings), dim=0)
+                    processed_chunks += 1
+
+                # Print the shape of the sentence embeddings
+                print(f"Shape of sentence embeddings: {embeddings.shape}")
             
             elif file_type == "ChatGPT-3.5":
-                openai = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
-                embeddings = openai.embed(text, model=model)
+                openai_3_large = OpenAIEmbeddings(model="text-embedding-3-large")
+                embeddings = openai_3_large.embed_query(text)
+
+
+                # openai = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
+                # embeddings = openai.embed(text, model=model)
         
             elif file_type == "ChatGPT-4":
                 openai = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
@@ -459,7 +503,8 @@ class research_libaray():
             
             #create a unique date-time key with the format: YYYY.MM.DD.HH.MM.SS.MS
             date_time_key = date.today().strftime("%Y.%m.%d.%H.%M.%S.%f")
-            as_of_date = as_of_date.strftime("%Y.%m.%d")
+            date_only_string = date.today().strftime("%Y-%m-%d")
+
 
             return_dict = {}
             if isinstance(embeddings, np.ndarray):
@@ -472,8 +517,8 @@ class research_libaray():
                                             "Title": title,
                                             "Description": description,
                                             "EmbeddingModel": file_type,
-                                            "EffectiveDate": as_of_date,
-                                            "TextExtraction": text,
+                                            "EffectiveDate": date_only_string,
+                                            "TextExtraction_blob": text,
                                             "EmbeddingsBinary_blob": embeddings,
                                             }
             
@@ -505,17 +550,13 @@ class research_libaray():
             if new_documents and len(new_documents) > 0:
                 documents.extend(new_documents) 
             
-            title = "123"
-            description = "123"
-            as_of_date = date.today()
-            
             embeddings_list = []
             if len(documents) > 0:
                 for file_path in documents:
                     with open(file_path, "r") as file:
                         text = file.read()
 
-                    embeddings = self.create_embeddings(text, file.name, f"{description[:100]}...", "General", as_of_date)
+                    embeddings = self.create_embeddings(text, file.name, f"{text[:100]}...", "ChatGPT-3.5")
                     embeddings_list.append(embeddings)
                 return embeddings_list
               

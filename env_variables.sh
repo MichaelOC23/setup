@@ -59,13 +59,21 @@ export PATH="${PATH}:/usr/sbin:/sbin:/usr/local/bin"      # Standard Path
 
 # Add additional locations to the PATH
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH" # Homebrew (prioritizing it over the system python)
-export PATH="${PATH}:${HOME}/.jbi/scripts"               # personal scripts
-export PATH="${PATH}:/Applications/geckodriver*"         # For Scraping
-export PATH="${PATH}:/opt/homebrew/bin/jupyter-lab"      # For Jupiter Lab
+export PATH="${PATH}:${HOME}/.jbi/scripts"
+export PATH="${PATH}:${HOME}/.jbi/classes"          # personal scripts
+export PATH="${PATH}:/Applications/geckodriver*"    # For Scraping
+export PATH="${PATH}:/opt/homebrew/bin/jupyter-lab" # For Jupiter Lab
 
 # Personal custom classes
 export PYTHONPATH="${HOME}/.jbi/classes"
 export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes/_class_streamlit.py"
+export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes/_class_extract_text.py"
+export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes/_class_ollama.py"
+export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes/_class_BMM.py"
+export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes/_class_storage.py"
+export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes/_class_dow_jones.py"
+export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes/_class_pe_categorize_transactions.py"
+export PYTHONPATH="${PYTHONPATH}:${HOME}/.jbi/classes/_class_search_web.py"
 
 # Set the default editor to Visual Studio Code
 export EDITOR="code"
