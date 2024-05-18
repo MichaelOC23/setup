@@ -278,7 +278,7 @@ class az_storage():
         # self.account_name="productstoragecommunify"
         # self.endpoint_suffix = "core.windows.net"
         self.connection_string = os.environ.get('PERSONAL_STORAGE_CONNECTION_STRING', 'No Key or Connection String found')
-        self.jbi_connection_string = "DefaultEndpointsProtocol=https;AccountName=productstoragecommunify;AccountKey=5I/0TKyJcdiKWeECsazinDF5pgPwTw7RNUdq3lSfO12DPt+OM2yh9/4eCpfsgxzScntzGdW2QoB9+AStbU3ovw==;EndpointSuffix=core.windows.net"
+        self.jbi_connection_string = os.environ.get('JBI_CONNECTION_STRING', 'No Key or Connection String found')
         self.transaction_pf_con_string = os.environ.get('PERSONAL_STORAGE_CONNECTION_STRING', 'No Key or Connection String found')
         self.unique_id = uuid.uuid4()
         self.log_container_name = "devcommunifylogs"
