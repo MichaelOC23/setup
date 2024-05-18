@@ -19,26 +19,8 @@ ensure_process_stopped_by_name() {
 
 # Call the function to kill processes with 'docker' in their names
 ensure_process_stopped_by_name "MyTechFlaskBackground"
-
-# Change to the directory where the code is located
-cd /Users/michasmi/.jbi/
-echo "Changed to the directory where the code is located."
-
-# Activate the virtual environment and set the FLASK_APP environment variable
-source /Users/michasmi/.jbi/jbi_venv/bin/activate
-echo "Activated the virtual environment."
-
-# Set the FLASK_APP environment variable (which is the path to the Flask app)
-export FLASK_APP=/Users/michasmi/.jbi/classes/FlaskBackground.py
-
-# Run the Flask app in the background
-cd /Users/michasmi/.jbi/classes/
-python FlaskBackground.py &
-
-# flask run --port 5005 &
-echo "Flask app running in the background."
-
-# Wait before resuming the script
-echo "Waiting for 5 seconds to test the app."
-sleep 5 # Pause for 5 seconds
-curl http://127.0.0.1:5005/isup
+ensure_process_stopped_by_name "python"
+# # ensure_process_stopped_by_name "Docker"
+# # ensure_process_stopped_by_name "docker"
+# ensure_process_stopped_by_name "chainlit"
+# ensure_process_stopped_by_name "ollama"

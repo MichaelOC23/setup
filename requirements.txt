@@ -25,6 +25,7 @@ nltk # Natural Language Toolkit
 # Web Frameworks
 flask  # Lightweight web framework for Python
 Flask-APScheduler
+setproctitle # Library for setting process titles in Python
 
 # PostgreSQL Database Connectivity
 asyncpg # Library for asynchronous PostgreSQL database access in Python

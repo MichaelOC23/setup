@@ -3,6 +3,7 @@ import os
 import json
 from datetime import datetime
 import asyncio
+import re
 import asyncpg
 import base64
 import random
@@ -272,17 +273,18 @@ EntityType = Union[TableEntity, Mapping[str, Any]]
 OperationType = Union[TransactionOperation, str]
 TransactionOperationType = Union[Tuple[OperationType, EntityType], Tuple[OperationType, EntityType, Mapping[str, Any]]]
 
-class _storage():
+class az_storage():
     def __init__(self ):
         # self.account_name="productstoragecommunify"
         # self.endpoint_suffix = "core.windows.net"
         self.connection_string = os.environ.get('PERSONAL_STORAGE_CONNECTION_STRING', 'No Key or Connection String found')
+        self.jbi_connection_string = "DefaultEndpointsProtocol=https;AccountName=productstoragecommunify;AccountKey=5I/0TKyJcdiKWeECsazinDF5pgPwTw7RNUdq3lSfO12DPt+OM2yh9/4eCpfsgxzScntzGdW2QoB9+AStbU3ovw==;EndpointSuffix=core.windows.net"
         self.transaction_pf_con_string = os.environ.get('PERSONAL_STORAGE_CONNECTION_STRING', 'No Key or Connection String found')
         self.unique_id = uuid.uuid4()
         self.log_container_name = "devcommunifylogs"
         self.content_container_name = "content"
         self.test_container_name = "testcontainer"
-        self.parameter_table_name = "devparameters"
+        self.parameter_table_name = "mytechparameters"
         self.parameter_partition_key = "parameter"
         # self.access_token_table_name_and_keys = "accesstoken"
         self.search_results_table_name = "searchresults"
@@ -452,7 +454,7 @@ class _storage():
         
         async with TableServiceClient.from_connection_string(self.connection_string) as table_service_client:
             response = await table_service_client.create_table_if_not_exists(table_name=table_name)
-            print(f"Created new table: {table_name} ")
+            # print(f"Created new table: {table_name} ")
             return response
     
     async def table_exists(self, table_name=None):
@@ -576,9 +578,20 @@ class _storage():
         # We will put large dictionary values into blobs and store the blob name in the entity.
         blob_extension = {}
         
+        entity_count = len(entities_list)
+        prior_percent_complete = 0
+        percent_complete = 0
+        on_entity = 0
         #Iterate through each entity in the list
         for entity in entities_list:
+            on_entity += 1
             
+            prior_percent_complete = percent_complete
+            percent_complete = (on_entity / entity_count)
+            
+            if round(percent_complete, 1) > round(prior_percent_complete, 1):
+                print(f"Percent Complete: {round(percent_complete * 100, 2)}%")
+
             #RowKey is required for each Entity
             if entity.get("RowKey") == '' or entity['RowKey'] == None:
                 raise ValueError("RowKey cannot be None or empty")
@@ -599,7 +612,7 @@ class _storage():
                 # Iterate through each key in the entity. If the field has _blob in it,
                 # that is the indicator that the size could be too large for the entity.
                 for key in entity.keys():
-                    if "_blob" in key:
+                    if "_blob".lower() in key.lower():
                         # If the value in the field is empty, skip it
                         blob_value = entity.get(key, None)  
                         if blob_value is None:
@@ -623,7 +636,7 @@ class _storage():
             
             
             conn_str = self.connection_string if alternate_connection_string == "" else alternate_connection_string
-            
+            resp_list = []
             #The entity is now ready to be added, updated, or deleted in the tale
             async with TableClient.from_connection_string(conn_str=conn_str, table_name=table_name) as table_client:
                 try:
@@ -633,7 +646,7 @@ class _storage():
                     
                     if instruction_type == "UPSERT_MERGE":
                         resp = await table_client.upsert_entity(mode=UpdateMode.MERGE, entity=entity)
-                        # print(f"UPSERT_MERGE entity: {entity['RowKey']}: {resp}")
+                        print(f"UPSERT_MERGE entity: {entity['RowKey']}: {resp}")
                     
                     if instruction_type == "UPSERT_REPLACE":
                         resp = await table_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
@@ -642,7 +655,7 @@ class _storage():
                     if instruction_type == "INSERT":
                         resp = await table_client.create_entity(entity)    
                     
-                    return resp 
+                    resp_list.append(resp)
                 
                 except Exception as e:
                     if attempt > 5:
@@ -652,7 +665,8 @@ class _storage():
                     print(f"Error: {e} ... waiting {wait_time} seconds before retrying")
                     await asyncio.sleep(wait_time)
                     return await self.add_update_or_delete_some_entities(table_name=table_name, entities_list=entity, instruction_type=instruction_type, attempt=attempt+1)
-                
+            
+        return resp_list
     
            #! get_entities_by_partition_key
     
@@ -705,11 +719,62 @@ class _storage():
     
            #! add_update_or_delete_some_entities
     
-
 #?   ##################################################
 #?   ##########       CUSTOM STORAGE         ##########
 #?   ##################################################           
                         
+    async def get_all_prospects(self, table_name="prospects", PartitionKey=None, RowKey=None, re_sanitize_keys = False, get_blob_extensions=False):
+        if table_name is None or table_name == "":
+            raise ValueError("Table name cannot be None or empty")
+        
+        pk_filter = ""
+        rk_filter = ""
+        
+        # The below contemplates that you might be searching for a the  original value (which would be displated to the user)
+        # or by the sanitized value (which is the value stored in the table)
+        
+        if re_sanitize_keys:
+            PartitionKey = await self.sanitize_key(PartitionKey)
+            RowKey = await self.sanitize_key(RowKey)
+        
+        async with TableClient.from_connection_string(self.jbi_connection_string, table_name) as table_client:
+            
+            parameters = {}
+            
+            if PartitionKey is not None and PartitionKey != "" and isinstance(PartitionKey, str):
+                parameters["pk"] = PartitionKey
+                pk_filter = "PartitionKey eq @pk"
+                
+            if RowKey is not None and RowKey != "" and isinstance(RowKey, str) :
+                parameters["rk"] = RowKey
+                rk_filter = "RowKey eq @rk"
+            
+            if pk_filter != "" and rk_filter != "":
+                query_filter = f"{pk_filter} and {rk_filter}"
+            else:
+                query_filter = f"{pk_filter}{rk_filter}"
+                
+            #!REMOVE ME
+            query_filter = "Version eq '0'"
+
+            some_entities =  await self.collect_entities_async(table_client, query_filter=query_filter , parameters=parameters)
+            
+            if get_blob_extensions:
+                async for entity in some_entities:
+                    for key in entity.keys():
+                        if "_blob" in key and entity[key] != "":
+                            try:
+                                blob_data = await self.get_blob(self.table_field_data_extension, entity[key])
+                            except:
+                                print(f"Error getting blob data for {entity[key]} ... no data returned")
+                                blob_data = ""
+        
+                            entity[key.replace("_blob", "")] = blob_data
+        
+            return some_entities
+        
+        
+        
     async def create_parameter(self, parameter_code, parameter_value):
         if parameter_code is None or parameter_code == "":
             raise ValueError("Parameter code cannot be None or empty")
@@ -749,10 +814,20 @@ class _storage():
     
     async def get_one_parameter(self, parameter_code):
         try:
-            await self.get_some_entities(table_name=self.parameter_table_name, PartitionKey=self.parameter_partition_key, RowKey=parameter_code)
+            # unsanitized_pkey = await(self.restore_sanitized_key(self.parameter_table_name))
+            # unsanitized_rkey = await(self.restore_sanitized_key(parameter_code))
+            return_param = await self.get_some_entities(table_name=self.parameter_table_name, PartitionKey=self.parameter_partition_key, RowKey=parameter_code, re_sanitize_keys=True)
+            if not return_param:
+                return "No Param Found"
+            elif isinstance(return_param, list) and len(return_param) > 0:
+                return return_param[0].get('parameter_value', "No Value Found")
+            else: 
+                return "Error"
               
         except Exception as e:
-                raise ValueError(f"Error: {e}")
+            raise ValueError(f"Error: {e}")
+            return None
+            
                 
     async def delete_parameter(self, parameter_code=None):
         if parameter_code is None or parameter_code == "":
@@ -862,10 +937,10 @@ class _storage():
 
         except Exception as e:
             raise ValueError(f"Error: {e}")
+
 #?   ##################################################
 #!   ######       CUSTOM PERSONAL STORAGE       #######
 #?   ################################################## 
-
 
 
     async def save_transaction(self, 
@@ -928,35 +1003,39 @@ class _storage():
 
 
 if __name__ == "__main__":
-    table = "public.bmmdicts"
-    storage = PsqlSimpleStorage()
-    # storage.delete_all_tables()
-    storage.setup_bmm_tables(table)
     
-    async def test():
-        model_list = []
-        entity_list = []
-        attribute_list = []
+    storage = az_storage()
+    prospect_entity_list = asyncio.run(storage.get_all_prospects())
+    pass
+    # table = "public.bmmdicts"
+    # storage = PsqlSimpleStorage()
+    # # storage.delete_all_tables()
+    # storage.setup_bmm_tables(table)
+    
+    # async def test():
+    #     model_list = []
+    #     entity_list = []
+    #     attribute_list = []
 
-        test_volume = 5
+    #     test_volume = 5
         
-        model = f"{uuid.uuid4()}"
-        for i in range(test_volume):
-            modelId = f"{uuid.uuid4()}"
-            for j in range(test_volume):
-                entityId = f"{uuid.uuid4()}"
-                for k in range(test_volume):
-                    attributeId = f"{uuid.uuid4()}"
-                    attribute_list.append({"partitionkey": entityId, "rowkey": attributeId, "structdata": {'attributeName': attributeId, 'attributeDescription': f"{uuid.uuid4()}",  'entityId': entityId, 'id': attributeId}})
-                entity_list.append({"partitionkey": modelId, "rowkey": entityId, "structdata": {'entityName': entityId, 'entityDescription': f"{uuid.uuid4()}", 'modelId': modelId, 'id': entityId}})
-            model_list.append({"partitionkey": "bmm_model", "rowkey": modelId, "structdata": {'modelName': modelId, 'modelDescription': f"{uuid.uuid4()}", 'id': modelId}})
+    #     model = f"{uuid.uuid4()}"
+    #     for i in range(test_volume):
+    #         modelId = f"{uuid.uuid4()}"
+    #         for j in range(test_volume):
+    #             entityId = f"{uuid.uuid4()}"
+    #             for k in range(test_volume):
+    #                 attributeId = f"{uuid.uuid4()}"
+    #                 attribute_list.append({"partitionkey": entityId, "rowkey": attributeId, "structdata": {'attributeName': attributeId, 'attributeDescription': f"{uuid.uuid4()}",  'entityId': entityId, 'id': attributeId}})
+    #             entity_list.append({"partitionkey": modelId, "rowkey": entityId, "structdata": {'entityName': entityId, 'entityDescription': f"{uuid.uuid4()}", 'modelId': modelId, 'id': entityId}})
+    #         model_list.append({"partitionkey": "bmm_model", "rowkey": modelId, "structdata": {'modelName': modelId, 'modelDescription': f"{uuid.uuid4()}", 'id': modelId}})
         
-        await storage.upsert_data(model_list)
-        await storage.upsert_data(entity_list)
-        await storage.upsert_data(attribute_list)
-        # await storage.get_data()
-        # await storage.delete_data({"partitionkey": "pk"})
+    #     await storage.upsert_data(model_list)
+    #     await storage.upsert_data(entity_list)
+    #     await storage.upsert_data(attribute_list)
+    #     # await storage.get_data()
+    #     # await storage.delete_data({"partitionkey": "pk"})
 
-    asyncio.run(test())
+    # asyncio.run(test())
     
     

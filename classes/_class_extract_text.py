@@ -721,7 +721,7 @@ if __name__ == '__main__':
     pass
     
     # # pdf_path = 'example.pdf'
-    directory_path = '/Users/michasmi/Downloads/stp'
+    directory_path = '/Users/michasmi/Downloads/pe'
     output_folder = directory_path
     ext_text = extract_text_from_file()
     uid_string = datetime.now().strftime("%Y%m%d%H%M%S")

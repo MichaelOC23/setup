@@ -1,5 +1,6 @@
 """googlesearch is a Python library for searching Google, easily."""
 
+import json
 import os
 import threading
 from langchain.retrievers.you import YouRetriever
@@ -15,6 +16,8 @@ from PIL import Image
 import imagehash
 import requests
 from io import BytesIO
+from bs4 import BeautifulSoup
+
 
 import _class_storage as azstr
 
@@ -34,7 +37,7 @@ class Search:
         self.google_image_cx = os.environ.get('GOOGLE_IMAGE_CX')
         self.hash_list = []
         self.flask_url = "http://127.0.0.1:5005/"
-        self.storage = azstr._storage()
+        self.storage = azstr.az_storage()
     
     async def search_images_fast(self, query, require_a_face=False):
         
@@ -172,6 +175,9 @@ class Search:
             qry+= f' AND ({other_details})'
         return qry
     
+    
+    #######################################################################
+    
     # @st.cache
     def search_web(self, query):
         # Uses the configured (non image) CSE to search for results. Returns page 1
@@ -185,6 +191,7 @@ class Search:
             thumb_list = result.get('pagemap', {}).get('cse_thumbnail', [])
             image_list = result.get('pagemap', {}).get('cse_image', [])
             metatag_list = result.get('pagemap', {}).get('metatags', [])
+            
             #Below is my view on prioritizing images and content
             primary_result_image = ""
             primary_site_image = ""
@@ -232,10 +239,11 @@ class Search:
             
             
             result_dict = {
-                "Type" : "web",
+                "Type" : "google",
                 "Query" : query,
                 "Site" : base_url,
                 "Summary" : result.get('htmlSnippet', result.get('snippet', '')),
+                "Page_Content": "",
                 "Link" : result.get('link', ''),
                 "Title": result.get('title', ''),
                 "primary_result_image" : primary_result_image,
@@ -245,11 +253,19 @@ class Search:
             results.append(result_dict)
         
         return results
+        
+    async def async_search_you_rag_content(self, query):
+        ydc_list = []
+        for doc in yr.get_relevant_documents(query):
+            text_val = f"<strong>{doc.type}</strong>: {doc.page_content}"
+            ydc_list.append(text_val)
+        return ydc_list
     
-    def search_web_async_with_assemble(self, first_name, last_name, other_details):
-        qry = self.assemble_web_query(first_name, last_name, other_details)
-        asyncio.run(self.search_web_async(qry))
-        return qry
+    async def async_search_google(self, query):
+        
+        search_results = self.search_web(query)
+        
+        return search_results
     
     async def search_web_async(self, query):
         search_results = self.search_web(query)
@@ -277,6 +293,14 @@ class Search:
         # all_raw = await self.scrape_results(query)
         
         return query
+    
+    
+    #######################################################################
+    
+    def search_web_async_with_assemble(self, first_name, last_name, other_details):
+        qry = self.assemble_web_query(first_name, last_name, other_details)
+        asyncio.run(self.search_web_async(qry))
+        return qry
 
     def try_to_scrape_search_results(self, search_results):        
         threads = []
@@ -452,6 +476,8 @@ class Search:
             text_val = f"<strong>{doc.type}</strong>: {doc.page_content}"
             ydc_list.append(text_val)
         return ydc_list
+    
+    
 
     async def get_stored_search_results(self, search_query):
         entities = await self.storage.get_some_entities(table_name=self.storage.url_results_table_name, PartitionKey=search_query, re_sanitize_keys=True)
@@ -477,9 +503,40 @@ class Search:
 
 if __name__ == "__main__":
     pass
-    # search = Search()
+
 
     
+    def test_search_simple(query="John Wise"):
+        
+        google_api_key = os.environ.get('GOOGLE_API_KEY')
+        google_general_cx = os.environ.get('GOOGLE_GENERAL_CX')
+        service = build("customsearch", "v1", developerKey=google_api_key)
+        search_results = (service.cse().list(q=query,cx=f"{google_general_cx}",).execute())
+        pass
+        with open("search_results.json", "w") as f:
+            f.write(json.dumps(search_results, indent=4))
+
+    test_search_simple()
 
 
-
+        # for result in search_results:
+        #     if result.get('Link', '') != None  and result.get('Link', '') != "" and result.get('Query', '') is not None and result.get('Query', '') != "":
+        #         Res_tasks.append(
+        #             self.storage.save_url(search_type=result.get('Type', ''),
+        #                                   search_query=query, 
+        #                                   result_name=result.get('Title', ''), #
+        #                                   site = result.get('Site', ''),
+        #                                   page_snippet=result.get('Summary', ''),
+        #                                   url=result.get('Link', ''), 
+        #                                   primary_result_image=result.get('primary_result_image', ''),
+        #                                   primary_site_image=result.get('primary_site_image', ''),
+                                          
+        #                                   ))
+        #     else:
+        #         continue
+                
+        # #Async: Save the results to the database
+        # response = await asyncio.gather(*Res_tasks)
+        
+        # #kick off Scraping
+        # # all_raw = await self.scrape_results(query)

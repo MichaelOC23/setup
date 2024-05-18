@@ -1,21 +1,43 @@
-
-
 from multiprocessing import process
 import streamlit as st
 import uuid
 import os
 import nltk
 import base64
-
+import asyncio
 from datetime import date
+import requests
+from urllib.parse import urlencode
+
 
 from langchain_openai import OpenAIEmbeddings
+
+########################################
+#######    STORAGE MANAGEMENT    #######
+########################################
+#Make sure there is a parameter table to store state
+from _class_storage import az_storage as cs
+storage = cs()
+asyncio.run(storage.create_table_safely(storage.parameter_table_name))
+
+def get_parameter_value(parameter_name):
+    parameter_value = asyncio.run(storage.get_one_parameter(parameter_name))
+    return parameter_value
+
+def set_parameter_value(parameter_name, parameter_value):
+    asyncio.run(storage.create_parameter(parameter_name, parameter_value))
 
 def initialize_session_state_variable(variable_name, variable_value):
     if variable_name not in st.session_state:
         st.session_state[variable_name] = variable_value
 
 def set_up_page(page_title_text="[TITLE NEEDED FOR PAGE]", jbi_or_cfy="jbi", light_or_dark="dark", session_state_variables=[], connect_to_dj=False, hideResultGridButton=False):  
+        
+    def initialize_session_state_variable(variable_name, variable_value):
+        if variable_name not in st.session_state:
+            st.session_state[variable_name] = variable_value
+
+    
     initialize_session_state_variable("DevModeState", False) 
     initialize_session_state_variable("settings", {"divider-color": "gray",}) 
     initialize_session_state_variable("djsession", None)
@@ -89,6 +111,7 @@ def set_up_page(page_title_text="[TITLE NEEDED FOR PAGE]", jbi_or_cfy="jbi", lig
     st.set_page_config(
             page_title=PAGE_TITLE, page_icon=":earth_americas:", layout="wide", initial_sidebar_state="expanded",
             menu_items={'Get Help': 'mailto:michael@justbuildit.com','Report a bug': 'mailto:michael@justbuildit.com',})    
+    
     border_color = "#FFFFFF"
     text_color = "#FFFFFF"
     background_color = "#1D1D1D"
@@ -244,8 +267,6 @@ def display_dj_search_results(simple_search_string = "", search_date_range="Last
                         if html is not None and html != "":
                             article_space.markdown(html, unsafe_allow_html=True)     
     
-   
-
 class research_libaray():
     def __init__(self ):
         self.azure_storage_connection_string = os.environ.get('PERSONAL_STORAGE_CONNECTION_STRING', 'No Key or Connection String found')
