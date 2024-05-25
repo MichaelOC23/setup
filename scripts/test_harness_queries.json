@@ -1,0 +1,6 @@
+{
+  "mutableassetsquery": "{\"RecordContext\": \"WATCHLIST\", \"SymTicker\": \"AAPL\", \"ComputePersonalGainLoss\":true}",
+  "mutableassetscreate": "{\"Item\": {\"RecordContext\": \"WATCHLIST\", \"UnitsHeld\": 999.999}}",
+  "watchlistsquery 2": "{\"Name\": \"g\"}",
+  "watchlistsmerge": "{\"Name\": \"g\"}"
+}

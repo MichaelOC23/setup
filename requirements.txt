@@ -22,9 +22,12 @@ pypdf2  # Library for reading PDF files
 nltk # Natural Language Toolkit
 # tk # Python client for Tinkter
 
+ipykernel # Jupyter Notebook support
+
 # Web Frameworks
 flask  # Lightweight web framework for Python
 Flask-APScheduler
+flask_socketio # Flask extension for Socket.IO (used with Deepgram)
 setproctitle # Library for setting process titles in Python
 
 # PostgreSQL Database Connectivity

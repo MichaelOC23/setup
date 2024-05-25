@@ -589,8 +589,8 @@ class az_storage():
             prior_percent_complete = percent_complete
             percent_complete = (on_entity / entity_count)
             
-            if round(percent_complete, 1) > round(prior_percent_complete, 1):
-                print(f"Percent Complete: {round(percent_complete * 100, 2)}%")
+            # if round(percent_complete, 1) > round(prior_percent_complete, 1):
+            #     print(f"Percent Complete: {round(percent_complete * 100, 2)}%")
 
             #RowKey is required for each Entity
             if entity.get("RowKey") == '' or entity['RowKey'] == None:
@@ -646,7 +646,7 @@ class az_storage():
                     
                     if instruction_type == "UPSERT_MERGE":
                         resp = await table_client.upsert_entity(mode=UpdateMode.MERGE, entity=entity)
-                        print(f"UPSERT_MERGE entity: {entity['RowKey']}: {resp}")
+                        # print(f"UPSERT_MERGE table: {table_name}  entity: {entity['RowKey']}: {resp}")
                     
                     if instruction_type == "UPSERT_REPLACE":
                         resp = await table_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)

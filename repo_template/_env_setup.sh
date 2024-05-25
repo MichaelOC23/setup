@@ -10,8 +10,8 @@ clear
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" # get the directory where the script is located ... full path
 CURRENT_DIR=$(basename "$PWD")                             #should be communify, the name of the project
 
-echo -e "Script directory: ${SCRIPT_DIR}\033[0m"
-echo -e "Current directory: ${CURRENT_DIR}\033[0m"
+echo -e "Script directory: "${SCRIPT_DIR}"\033[0m"
+echo -e "Current directory: "${CURRENT_DIR}"\033[0m"
 
 # Change to that directory
 cd "${SCRIPT_DIR}" || exit 1
@@ -45,7 +45,7 @@ python3 -m venv "/${FULL_VENV_PATH}" || {
 echo -e "\033[1;32mVirtual environment created successfully\033[0m"
 
 # Change directory
-cd ${FULL_VENV_PATH} || {
+cd "${FULL_VENV_PATH}" || {
     echo -e "\033[1;31mChanging directory failed\033[0m"
     exit 1
 }
@@ -67,7 +67,7 @@ echo -e "\033[1;32mPip upgrade successful\033[0m"
 
 # Install requirements
 echo -e "\n\n\033[4;32mProceeding with the installation of all libraries ...\033[0m"
-pip install -r ${REQUIREMENTS_FILE} || {
+pip install -r "${REQUIREMENTS_FILE}" || {
     echo -e "\033[1;31mRequirements installation failed\033[0m"
     exit 1
 }
@@ -80,7 +80,7 @@ echo -e "\033[1;32mRequirements installation successful\033[0m"
 cd "${SCRIPT_DIR}" || exit 1
 # ### Backup current requirements
 mkdir -p .req_backup
-cp ${REQUIREMENTS_FILE} ".req_backup/requirements_raw_$(date +%Y%m%d_%H%M%S).txt" || {
+cp "${REQUIREMENTS_FILE}" ".req_backup/requirements_raw_$(date +%Y%m%d_%H%M%S).txt" || {
     echo -e "\033[1;31mRequirements backup failed\033[0m"
     exit 1
 }

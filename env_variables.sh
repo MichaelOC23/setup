@@ -3,6 +3,7 @@
 
 # Capture and print the current time:
 export ENV_VAR_LOAD_DATE_TIME=$(date '+%Y-%m-%d %H:%M:%S')
+export PGPORT=4999
 
 #sync with the dashlane cli. This updates the secrets to be stored locally
 dcli sync
