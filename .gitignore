@@ -1,6 +1,8 @@
 *_modules/
 *_modules*
 *_ignore/
+*audio-raw/
+*audio-raw
 *_ignore*
 *-ignore/
 *-ignore*
