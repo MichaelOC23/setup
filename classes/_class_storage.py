@@ -1,9 +1,8 @@
-from curses.ascii import alt
+
 import os
 import json
 from datetime import datetime
 import asyncio
-import re
 import asyncpg
 import base64
 import random
@@ -15,263 +14,12 @@ from azure.data.tables import UpdateMode, TransactionOperation, TableEntity, Tab
 from azure.data.tables.aio import TableClient, TableServiceClient
 from azure.storage.blob.aio import BlobServiceClient, BlobClient, ContainerClient
 import psycopg2
+from sympy import div
 # from azure.core.exceptions import ResourceExistsError, HttpResponseError
 
 bmm_table = "public.bmmdicts"
 
-class PsqlSimpleStorage():
-    def __init__(self ):
-        
-        if 'USE_LOCAL_POSTGRES' in os.environ:
-            self.connection_string = os.environ.get('LOCAL_POSTGRES_CONNECTION_STRING', 'No Postgres Key or Connection String found')
-        
-        else:
-            ngrok_url = os.environ.get('NGROK_PUBLIC_URL', False)
-            if not ngrok_url:
-                raise ValueError("NGROK_PUBLIC_URL not found in environment variables.")
-            ngrok_parts = ngrok_url.replace("tcp://", "").split(":")
-            remote_postgres_host = ngrok_parts[0]
-            remote_postgres_port = ngrok_parts[1]
-            remote_postgres_db = os.environ.get('BMM_DB', 'No Postgres DB found')
-            username = 'postgres'
-            self.connection_string = f'postgresql://{username}:@{remote_postgres_host}:{remote_postgres_port}/{remote_postgres_db}'
-        if self.connection_string == 'NONE':
-            self.connection_string = self.get_new_connection_string()
-        
-        self.unique_initialization_id = uuid.uuid4()
-        self.bmm_table = bmm_table
-        self.parameter_table_name = "devparameters"
-        self.parameter_partition_key = "parameter"
-        self.access_token_table_name = "accesstoken"
-        self.search_results_table_name = "searchresults"
-        self.url_results_table_name = "urlcontent"
-        
-    def get_new_connection_string(self):
-        ngrok_tcp_url = self.get_ngrok_public_url()
-        
-    def get_ngrok_public_url(self, get_new_url=False):
-        if 'NGROK_TCP_URL_POSTGRES' in os.environ and not get_new_url:
-            return os.environ['NGROK_TCP_URL_POSTGRES']
-        elif get_new_url:
-            return self.extract_ngrok_public_url(get_new_url=True)
-        
-        if 'NGROK_API_KEY' not in os.environ:
-            print("NGROK_API_KEY not found in environment variables.")
-            raise ValueError("NGROK_API_KEY not found in environment variables.")
-        
-        NGROK_API_KEY = os.getenv("NGROK_API_KEY")
-        headers = {
-            "Authorization": f"Bearer {NGROK_API_KEY}",
-            "Ngrok-Version": "2"
-        }
-        url = "https://api.ngrok.com/endpoints"
 
-        try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()  # Raises a HTTPError for bad responses
-            data = response.json()
-            
-            if "endpoints" in data and len(data["endpoints"]) > 0:
-                public_url = data["endpoints"][0]["public_url"]
-                print(f"Extracted Public URL: {public_url}")
-                os.environ['NGROK_TCP_URL_POSTGRES'] = public_url
-                return public_url
-            else:
-                print("Failed to extract the public URL.")
-                return None
-        except requests.RequestException as e:
-            print(f"Request failed: {e}")
-            return None
-        
-    async def get_data(self, partitionkey=None, rowkey=None, table_name=bmm_table, unpack_structdata=True):
-        query = f"SELECT id, is_current, archivedon, partitionkey, rowkey, structdata FROM {table_name}"
-        conditions = [" is_current = TRUE "]
-        params = []
-
-        
-        if partitionkey:
-            conditions.append("partitionkey = $1")
-            params.append(partitionkey)
-        if rowkey:
-            conditions.append("rowkey = $2" if partitionkey else "rowkey = $1")
-            params.append(rowkey)
-        
-        if conditions:
-            query += " WHERE" + " AND ".join(conditions)
-            
-        try:
-            conn = await asyncpg.connect(self.connection_string)
-            try:
-
-                async with conn.transaction():
-                    records = []
-                    all_records = await conn.fetch(query, *params)
-                    for record in all_records:
-                        # Convert Record to a dict. merge with 'structdata' JSON (if unpack_structdata is True)
-                        full_record = dict(record)
-                        if unpack_structdata:
-                            full_record.update(json.loads(record['structdata']))
-                        records.append(full_record)
-                return records
-
-            finally:
-                await conn.close()
-        except Exception as e:
-            print(f"Database error during Get Data: {e}")
-            return []
-
-    async def upsert_data(self, data_items, table_name=bmm_table):
-        if not isinstance(data_items, list):
-            data_items = [data_items]
-
-        try:
-            conn = await asyncpg.connect(self.connection_string)
-            for item in data_items:
-                async with conn.transaction():
-                    # Fetch the current structdata for merging
-                    existing_structdata = await conn.fetchval(f"""
-                        SELECT structdata FROM {table_name} 
-                        WHERE partitionkey = $1 AND rowkey = $2 AND is_current = TRUE
-                    """, item['partitionkey'], item['rowkey'])
-                    
-                    # If existing data is found, merge it with the new structdata
-                    if existing_structdata:
-                        existing_data_dict = json.loads(existing_structdata)
-                        merged_data = existing_data_dict 
-                        merged_data.update(item.get('structdata', {})) 
-                        # merged_data = {**existing_data_dict, **item.get('structdata', {})}
-                    else:
-                        merged_data = item.get('structdata', {})
-                    
-                    # Update the existing current record if it exists
-                    archive_result = await conn.execute(f"""
-                        UPDATE {table_name} SET archivedon = NOW() AT TIME ZONE 'UTC', is_current = FALSE
-                        WHERE partitionkey = $1 AND rowkey = $2 AND is_current = TRUE
-                    """, item['partitionkey'], item['rowkey'])
-                    # print(f"Archived data: {item['partitionkey']} - {item['rowkey']} with result: {archive_result}")
-
-                    update_sql = f"""
-                    INSERT INTO {table_name} (partitionkey, rowkey, structdata, is_current)
-                        VALUES ($1, $2, $3, TRUE)"""
-                    # print(f"Upserting data: {item['partitionkey']} - {item['rowkey']} with sql: {update_sql}")
-                    updated_result = await conn.execute(update_sql, item['partitionkey'], item['rowkey'], json.dumps(merged_data))
-                    # print(f"Upserted data: {item['partitionkey']} - {item['rowkey']} with result: {updated_result}")
-            await conn.close()
-            return data_items
-        except Exception as e:
-            print(f"Database error during upsert: {e}")
-  
-    async def delete_data(self, keys, table_name=bmm_table):
-        if not isinstance(keys, list):
-            keys = [keys]
-
-        try:
-            conn = await asyncpg.connect(self.connection_string)
-            for key in keys:
-                # Construct the WHERE clause based on input keys
-                where_clause = []
-                values = []
-                if 'partitionkey' in key:
-                    where_clause.append("partitionkey = $1")
-                    values.append(key['partitionkey'])
-                if 'rowkey' in key:
-                    where_clause.append(f"rowkey = ${len(values) + 1}")
-                    values.append(key['rowkey'])
-
-                # Construct and execute the update query to mark records as archived
-                if where_clause:
-                    query = f"""
-                        UPDATE {table_name}
-                        SET is_current = FALSE, archivedon = (NOW() AT TIME ZONE 'UTC')
-                        WHERE {" AND ".join(where_clause)}
-                    """
-                    deleted_result = await conn.execute(query, *values)
-                    print(f"Deleted data: {key} and got result: {deleted_result}")
-
-            await conn.close()
-        except Exception as e:
-            print(f"Database error during delete: {e}")
-
-    def setup_bmm_tables(self, table_name):
-
-        conn = psycopg2.connect(self.connection_string)
-        cursor = conn.cursor()
-        
-        create_table_dict = {
-
-        "create_table": f"""CREATE TABLE IF NOT EXISTS {table_name} (
-            id SERIAL PRIMARY KEY,
-            partitionkey VARCHAR(100),
-            rowkey VARCHAR(100),
-            structdata JSONB,
-            binarydoc BYTEA,
-            createdon TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            archivedon TIMESTAMP,  
-            is_current BOOLEAN DEFAULT TRUE,  
-            createdby VARCHAR(50),
-            archivedby VARCHAR(50),
-            loadsource VARCHAR(10)
-        );""",
-            
-            "index1": f"CREATE UNIQUE INDEX idx_partitionkey_rowkey_current ON {table_name} (partitionkey, rowkey) WHERE is_current = TRUE;"
-
-        
-        # 'constraint1': f"CREATE UNIQUE INDEX idx_unique_current ON {table_name} (partitionkey, rowkey) WHERE is_current = TRUE;",
-        
-        # # # Index for pattern 3
-        # # "index3": f"CREATE INDEX IF NOT EXISTS idx_rowkey_archivedon_null ON {table_name} (rowkey) WHERE is_current = TRUE;",
-
-        # # GIN index for structdata searches
-        # "index4": f"CREATE INDEX IF NOT EXISTS idx_structdata_gin ON {table_name} USING GIN (structdata);"
-
-        
-
-        }
-        
-        conn = psycopg2.connect(self.connection_string)
-        with conn:
-            with conn.cursor() as cursor:
-                for key, command in create_table_dict.items():
-                    try:
-                        cursor.execute(command)
-                    except Exception as e:
-                        print(f"Database error during table setup: {e} with statement: {command}")
-                        break  # Or decide how to handle the error
-
-    def delete_all_tables(self):
-        # Safety check or environment check could go here
-        # e.g., confirm deletion or check if running in a production environment
-
-        try:
-            # Connect to the database
-                conn = psycopg2.connect(self.connection_string)
-                with conn:
-                    with conn.cursor() as cursor:
-                        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
-                        tables = cursor.fetchall()
-
-                        # Build list of table names, excluding system tables
-                        table_names = [table[0] for table in tables if not table[0].startswith(('pg_', 'sql_'))]
-
-                        # Generate and execute DROP TABLE statements in a single transaction
-                        if table_names:
-                            drop_query = "DROP TABLE IF EXISTS " + ", ".join(table_names) + " CASCADE;"
-                            print(drop_query)  # Optional: for logging or confirmation
-                            cursor.execute(drop_query)
-                            
-                        # Commit changes
-                        conn.commit()
-                    
-        except psycopg2.Error as e:
-            print(f"An error occurred: {e}")
-            return False
-        
-        return True
-    
-
-EntityType = Union[TableEntity, Mapping[str, Any]]
-OperationType = Union[TransactionOperation, str]
-TransactionOperationType = Union[Tuple[OperationType, EntityType], Tuple[OperationType, EntityType, Mapping[str, Any]]]
 
 class az_storage():
     def __init__(self ):
@@ -521,30 +269,34 @@ class az_storage():
         if not isinstance(entity, dict):
             raise ValueError("Entity must be a dictionary")
         
-        entity["Orig_RowKey"] = entity.get("RowKey")
-        entity["Orig_PartitionKey"] = entity.get("PartitionKey")
-        if entity.get("RowKey") is not None:
-            entity["RowKey"] = await self.sanitize_key(entity["RowKey"])
+        entity["Orig_rowkey"] = entity.get("rowkey")
+        entity["Orig_partitionkey"] = entity.get("partitionkey")
+        if entity.get("rowkey") is not None:
+            entity["rowkey"] = await self.sanitize_key(entity["rowkey"])
             
-        if entity.get("PartitionKey") is not None:
-            entity["PartitionKey"] = await self.sanitize_key(entity["PartitionKey"])    
+        if entity.get("partitionkey") is not None:
+            entity["partitionkey"] = await self.sanitize_key(entity["partitionkey"])    
         
         return entity
 
     async def create_test_entities(self):
                        
-        entity1 = {"PartitionKey": "pk002", "RowKey": "rk002", "Value": 1, "day": "Monday", "float": 1.003}
-        entity2 = {"PartitionKey": "pk002", "RowKey": "rk002", "Value": 2, "day": "Tuesday", "float": 2.003}
-        entity3 = {"PartitionKey": "pk002", "RowKey": "rk003", "Value": 3, "day": "Wednesday", "float": 3.003}
-        entity4 = {"PartitionKey": "pk002", "RowKey": "rk004", "Value": 4, "day": "Thursday", "float": 4.003}
+        entity1 = {"partitionkey": "pk002", "rowkey": "rk002", "Value": 1, "day": "Monday", "float": 1.003}
+        entity2 = {"partitionkey": "pk002", "rowkey": "rk002", "Value": 2, "day": "Tuesday", "float": 2.003}
+        entity3 = {"partitionkey": "pk002", "rowkey": "rk003", "Value": 3, "day": "Wednesday", "float": 3.003}
+        entity4 = {"partitionkey": "pk002", "rowkey": "rk004", "Value": 4, "day": "Thursday", "float": 4.003}
 
         list_of_entities = [entity1, entity2, entity3, entity4]
         
         return list_of_entities
     
     async def load_test_entity_update_batch(self, table_name, list_of_entities):
+        EntityType = Union[TableEntity, Mapping[str, Any]]
+        OperationType = Union[TransactionOperation, str]
         
-        operations: List[TransactionOperationType] = [
+        TransactionOperationType = Union[Tuple[OperationType, EntityType], Tuple[OperationType, EntityType, Mapping[str, Any]]]
+        
+        operations: List[TransactionOperationType] = [ # type: ignore
             ("delete", list_of_entities[0]),
             ("delete", list_of_entities[1]),
             ("upsert", list_of_entities[2]),
@@ -592,17 +344,17 @@ class az_storage():
             # if round(percent_complete, 1) > round(prior_percent_complete, 1):
             #     print(f"Percent Complete: {round(percent_complete * 100, 2)}%")
 
-            #RowKey is required for each Entity
-            if entity.get("RowKey") == '' or entity['RowKey'] == None:
-                raise ValueError("RowKey cannot be None or empty")
+            #rowkey is required for each Entity
+            if entity.get("rowkey") == '' or entity['rowkey'] == None:
+                raise ValueError("rowkey cannot be None or empty")
             
-            #PartitionKey is required for each Entity
-            if entity.get("PartitionKey") == '' or entity['PartitionKey'] == None:
-                raise ValueError("PartitionKey cannot be None or empty")
+            #partitionkey is required for each Entity
+            if entity.get("partitionkey") == '' or entity['partitionkey'] == None:
+                raise ValueError("partitionkey cannot be None or empty")
             
-            #If the entity does not have an "Orig_PartitionKey" and "Orig_RowKey" key, then sanitize the 
-            #entity by encoding the RowKey and PartitionKey and storing the original values in the entity. 
-            if "Orig_PartitionKey" not in entity.keys() and"Orig_RowKey" not in entity.keys():
+            #If the entity does not have an "Orig_partitionkey" and "Orig_rowkey" key, then sanitize the 
+            #entity by encoding the rowkey and partitionkey and storing the original values in the entity. 
+            if "Orig_partitionkey" not in entity.keys() and"Orig_rowkey" not in entity.keys():
                 entity = await self.sanitize_entity(entity)
             
             #If the instruction type is not DELETE, then check for blob fields in the entity
@@ -642,15 +394,15 @@ class az_storage():
                 try:
                         
                     if instruction_type == "DELETE":
-                        resp = await table_client.delete_entity(row_key=entity["RowKey"], partition_key=entity["PartitionKey"])
+                        resp = await table_client.delete_entity(row_key=entity["rowkey"], partition_key=entity["partitionkey"])
                     
                     if instruction_type == "UPSERT_MERGE":
                         resp = await table_client.upsert_entity(mode=UpdateMode.MERGE, entity=entity)
-                        # print(f"UPSERT_MERGE table: {table_name}  entity: {entity['RowKey']}: {resp}")
+                        # print(f"UPSERT_MERGE table: {table_name}  entity: {entity['rowkey']}: {resp}")
                     
                     if instruction_type == "UPSERT_REPLACE":
                         resp = await table_client.upsert_entity(mode=UpdateMode.REPLACE, entity=entity)
-                        # print(f"UPSERT_REPLACE entity: {entity['RowKey']}: {resp}")
+                        # print(f"UPSERT_REPLACE entity: {entity['rowkey']}: {resp}")
                     
                     if instruction_type == "INSERT":
                         resp = await table_client.create_entity(entity)    
@@ -670,7 +422,7 @@ class az_storage():
     
            #! get_entities_by_partition_key
     
-    async def get_some_entities(self, table_name=None, PartitionKey=None, RowKey=None, re_sanitize_keys = False, get_blob_extensions=False):
+    async def get_some_entities(self, table_name=None, partitionkey=None, rowkey=None, re_sanitize_keys = False, get_blob_extensions=False):
         if table_name is None or table_name == "":
             raise ValueError("Table name cannot be None or empty")
         
@@ -681,20 +433,20 @@ class az_storage():
         # or by the sanitized value (which is the value stored in the table)
         
         if re_sanitize_keys:
-            PartitionKey = await self.sanitize_key(PartitionKey)
-            RowKey = await self.sanitize_key(RowKey)
+            partitionkey = await self.sanitize_key(partitionkey)
+            rowkey = await self.sanitize_key(rowkey)
         
         async with TableClient.from_connection_string(self.connection_string, table_name) as table_client:
             
             parameters = {}
             
-            if PartitionKey is not None and PartitionKey != "" and isinstance(PartitionKey, str):
-                parameters["pk"] = PartitionKey
-                pk_filter = "PartitionKey eq @pk"
+            if partitionkey is not None and partitionkey != "" and isinstance(partitionkey, str):
+                parameters["pk"] = partitionkey
+                pk_filter = "partitionkey eq @pk"
                 
-            if RowKey is not None and RowKey != "" and isinstance(RowKey, str) :
-                parameters["rk"] = RowKey
-                rk_filter = "RowKey eq @rk"
+            if rowkey is not None and rowkey != "" and isinstance(rowkey, str) :
+                parameters["rk"] = rowkey
+                rk_filter = "rowkey eq @rk"
             
             if pk_filter != "" and rk_filter != "":
                 query_filter = f"{pk_filter} and {rk_filter}"
@@ -723,7 +475,7 @@ class az_storage():
 #?   ##########       CUSTOM STORAGE         ##########
 #?   ##################################################           
                         
-    async def get_all_prospects(self, table_name="prospects", PartitionKey=None, RowKey=None, re_sanitize_keys = False, get_blob_extensions=False):
+    async def get_all_prospects(self, table_name="prospects", partitionkey=None, rowkey=None, re_sanitize_keys = False, get_blob_extensions=False):
         if table_name is None or table_name == "":
             raise ValueError("Table name cannot be None or empty")
         
@@ -734,20 +486,20 @@ class az_storage():
         # or by the sanitized value (which is the value stored in the table)
         
         if re_sanitize_keys:
-            PartitionKey = await self.sanitize_key(PartitionKey)
-            RowKey = await self.sanitize_key(RowKey)
+            partitionkey = await self.sanitize_key(partitionkey)
+            rowkey = await self.sanitize_key(rowkey)
         
         async with TableClient.from_connection_string(self.jbi_connection_string, table_name) as table_client:
             
             parameters = {}
             
-            if PartitionKey is not None and PartitionKey != "" and isinstance(PartitionKey, str):
-                parameters["pk"] = PartitionKey
-                pk_filter = "PartitionKey eq @pk"
+            if partitionkey is not None and partitionkey != "" and isinstance(partitionkey, str):
+                parameters["pk"] = partitionkey
+                pk_filter = "partitionkey eq @pk"
                 
-            if RowKey is not None and RowKey != "" and isinstance(RowKey, str) :
-                parameters["rk"] = RowKey
-                rk_filter = "RowKey eq @rk"
+            if rowkey is not None and rowkey != "" and isinstance(rowkey, str) :
+                parameters["rk"] = rowkey
+                rk_filter = "rowkey eq @rk"
             
             if pk_filter != "" and rk_filter != "":
                 query_filter = f"{pk_filter} and {rk_filter}"
@@ -782,8 +534,8 @@ class az_storage():
             raise ValueError("Parameter value cannot be None or empty")
         try:
             new_parameter = {
-                "PartitionKey": self.parameter_partition_key,
-                "RowKey": parameter_code,   # Article ID (unique)
+                "partitionkey": self.parameter_partition_key,
+                "rowkey": parameter_code,   # Article ID (unique)
                 "parameter_value": parameter_value      # Image URL
                 }
             
@@ -816,7 +568,7 @@ class az_storage():
         try:
             # unsanitized_pkey = await(self.restore_sanitized_key(self.parameter_table_name))
             # unsanitized_rkey = await(self.restore_sanitized_key(parameter_code))
-            return_param = await self.get_some_entities(table_name=self.parameter_table_name, PartitionKey=self.parameter_partition_key, RowKey=parameter_code, re_sanitize_keys=True)
+            return_param = await self.get_some_entities(table_name=self.parameter_table_name, partitionkey=self.parameter_partition_key, rowkey=parameter_code, re_sanitize_keys=True)
             if not return_param:
                 return "No Param Found"
             elif isinstance(return_param, list) and len(return_param) > 0:
@@ -833,7 +585,7 @@ class az_storage():
         if parameter_code is None or parameter_code == "":
             raise ValueError("Parameter code cannot be None or empty")
         try:
-            await self.add_update_or_delete_some_entities(table_name=self.parameter_table_name, PartitionKey=self.parameter_partition_key, RowKey=parameter_code)
+            await self.add_update_or_delete_some_entities(table_name=self.parameter_table_name, partitionkey=self.parameter_partition_key, rowkey=parameter_code)
         except Exception as e:
             raise ValueError(f"Error: {e}")
 
@@ -851,7 +603,7 @@ class az_storage():
     async def delete_token(self):
     
         try:
-            await self.add_update_or_delete_some_entities(table_name=self.access_token_table_name_and_keys, entities_list= {"PartitionKey": self.access_token_table_name_and_keys, "RowKey": self.access_token_table_name_and_keys}, instruction_type="DELETE")
+            await self.add_update_or_delete_some_entities(table_name=self.access_token_table_name_and_keys, entities_list= {"partitionkey": self.access_token_table_name_and_keys, "rowkey": self.access_token_table_name_and_keys}, instruction_type="DELETE")
         except Exception as e:
             raise ValueError(f"Error: {e}")
                         
@@ -861,8 +613,8 @@ class az_storage():
 
         try:
             new_parameter = {
-                "PartitionKey": self.access_token_table_name_and_keys,
-                "RowKey": self.access_token_table_name_and_keys,   # Article ID (unique)
+                "partitionkey": self.access_token_table_name_and_keys,
+                "rowkey": self.access_token_table_name_and_keys,   # Article ID (unique)
                 "parameter_value": access_token      # Image URL
                 }
             
@@ -874,7 +626,7 @@ class az_storage():
     
     async def get_token(self):
         try:
-            access_token_table_entry = await self.get_some_entities(table_name=self.access_token_table_name_and_keys, PartitionKey=self.access_token_table_name_and_keys, RowKey=self.access_token_table_name_and_keys)
+            access_token_table_entry = await self.get_some_entities(table_name=self.access_token_table_name_and_keys, partitionkey=self.access_token_table_name_and_keys, rowkey=self.access_token_table_name_and_keys)
             
             access_token_string = access_token_table_entry.get("parameter_value")
             try:
@@ -913,8 +665,8 @@ class az_storage():
 
         try:
             new_url = {
-                "PartitionKey": search_query,
-                "RowKey": url,   
+                "partitionkey": search_query,
+                "rowkey": url,   
                 "search_type": search_type,
                 "result_name": result_name,
                 "page_snippet": page_snippet,
@@ -969,8 +721,8 @@ class az_storage():
 
         try:
             new_transaction = {
-                "PartitionKey": txtCategory,
-                "RowKey": txtUniqueBusinessKey,   
+                "partitionkey": txtCategory,
+                "rowkey": txtUniqueBusinessKey,   
                 "txtFileSource": txtFileSource,
                 "txtUniqueBusinessKey": txtUniqueBusinessKey,
                 "datTransactionDate": datTransactionDate,
@@ -1003,39 +755,13 @@ class az_storage():
 
 
 if __name__ == "__main__":
-    
-    storage = az_storage()
-    prospect_entity_list = asyncio.run(storage.get_all_prospects())
     pass
+    # storage = az_storage()
+    # # prospect_entity_list = asyncio.run(storage.get_all_prospects())
+    # # pass
     # table = "public.bmmdicts"
     # storage = PsqlSimpleStorage()
     # # storage.delete_all_tables()
     # storage.setup_bmm_tables(table)
-    
-    # async def test():
-    #     model_list = []
-    #     entity_list = []
-    #     attribute_list = []
-
-    #     test_volume = 5
-        
-    #     model = f"{uuid.uuid4()}"
-    #     for i in range(test_volume):
-    #         modelId = f"{uuid.uuid4()}"
-    #         for j in range(test_volume):
-    #             entityId = f"{uuid.uuid4()}"
-    #             for k in range(test_volume):
-    #                 attributeId = f"{uuid.uuid4()}"
-    #                 attribute_list.append({"partitionkey": entityId, "rowkey": attributeId, "structdata": {'attributeName': attributeId, 'attributeDescription': f"{uuid.uuid4()}",  'entityId': entityId, 'id': attributeId}})
-    #             entity_list.append({"partitionkey": modelId, "rowkey": entityId, "structdata": {'entityName': entityId, 'entityDescription': f"{uuid.uuid4()}", 'modelId': modelId, 'id': entityId}})
-    #         model_list.append({"partitionkey": "bmm_model", "rowkey": modelId, "structdata": {'modelName': modelId, 'modelDescription': f"{uuid.uuid4()}", 'id': modelId}})
-        
-    #     await storage.upsert_data(model_list)
-    #     await storage.upsert_data(entity_list)
-    #     await storage.upsert_data(attribute_list)
-    #     # await storage.get_data()
-    #     # await storage.delete_data({"partitionkey": "pk"})
-
-    # asyncio.run(test())
     
     
