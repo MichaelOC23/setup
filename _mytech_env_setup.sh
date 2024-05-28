@@ -18,6 +18,9 @@ echo "Requirements file: $REQUIREMENTS_FILE"
 
 VENV_NAME="jbi_venv"
 
+# add a symbolic link to the another folder with py files (if it doesn't exist)
+[ -d classes ] || ln -s ${HOME}/code/mytech/classes ./classes
+
 # Form the name of the virtual environment directory
 VENV_DIR="${SCRIPT_DIR}/$VENV_NAME"
 echo "Virtual environment directory: $VENV_DIR"

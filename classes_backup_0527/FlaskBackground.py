@@ -1,6 +1,3 @@
-
-
-
 from flask import Flask, request, jsonify, redirect, url_for, session
 from datetime import datetime
 
@@ -9,18 +6,14 @@ import ollama
 import argparse
 from openai import OpenAI
 
-
 from openai import chat
 from langchain.retrievers.you import YouRetriever 
 import asyncio
 
-
-
 import re
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
+# from playwright.sync_api import sync_playwright
 from playwright.async_api import async_playwright
-
 
 import json
 import os
@@ -32,9 +25,6 @@ import urllib.parse
 
 import html2text
 import requests
-
-
-
 
 import time
 from io import StringIO
@@ -64,7 +54,8 @@ yr = YouRetriever()
 
 
 import _class_search_web
-import _class_storage
+import _class_streamlit
+# import _class_storage
 
 #Deepgram
 from dotenv import load_dotenv
@@ -119,16 +110,16 @@ if not os.path.exists(log_directory):
     os.makedirs(log_directory)
     
 search = _class_search_web.Search()
-storage = _class_storage.az_storage()
+storage = _class_streamlit.PsqlSimpleStorage()
 
-asyncio.run(storage.create_parameter("StartStopButton", "Start Meeting"))
+# asyncio.run(storage.create_parameter("StartStopButton", "Start Meeting"))
 
 #Make sure there is a parameter table to store state
-asyncio.run(storage.create_table_safely(storage.parameter_table_name))
+# asyncio.run(storage.create_table_safely(storage.parameter_table_name))
 
 #Set default state parameters
-for key in state_parameters.keys():
-    asyncio.run(storage.create_parameter(key, state_parameters[key]["Default"]))
+# for key in state_parameters.keys():
+#     asyncio.run(storage.create_parameter(key, state_parameters[key]["Default"]))
 
 def flatten_dict(d, parent_key='', sep='_'):
     items = []
@@ -796,7 +787,7 @@ class prospect_data_pipeline:
 
         key_contacts  = []
         for title in self.titles_list:
-            user_input = get_prompts(title, self.company)
+            user_input = get_prompt(title, self.company)
             response = ollama_chat(user_input, system_message, vault_embeddings_tensor, package['Text_To_Embed'], args.model, conversation_history)
             print(NEON_GREEN + "Response: \n\n" + response + RESET_COLOR)
             key_contacts.append(response)
@@ -812,7 +803,8 @@ class prospect_data_pipeline:
 @app.route('/prospectpipeline', methods=['POST'])
 def process_pipeline_all_prospects():
     
-    storage = _class_storage.az_storage()
+    
+    storage = _class_streamlit.PsqlSimpleStorage()
     prospect_list = asyncio.run(storage.get_all_prospects())
     print(f"Successfully got prospect list with count '{len(prospect_list)}'")
     
@@ -828,19 +820,17 @@ def process_pipeline_all_prospects():
 ##############################################
 ####    Audio Transcription Functions     ####
 ##############################################
-
- 
 is_finals = queue.Queue()
 stop_event = threading.Event()
 
-asyncio.run(storage.create_parameter("StartStopButton", "Start Meeting"))
+# asyncio.run(storage.create_parameter("StartStopButton", "Start Meeting"))
 
 #Make sure there is a parameter table to store state
-asyncio.run(storage.create_table_safely(storage.parameter_table_name))
+# asyncio.run(storage.create_table_safely(storage.parameter_table_name))
 
-#Set default state parameters
-for key in state_parameters.keys():
-    asyncio.run(storage.create_parameter(key, state_parameters[key]["Default"]))
+# #Set default state parameters
+# for key in state_parameters.keys():
+#     asyncio.run(storage.create_parameter(key, state_parameters[key]["Default"]))
 
 
 def capture_audio(device_index, channels, q):
@@ -1223,7 +1213,7 @@ def auth_redirect():
 
 if __name__ == "__main__":
     # Set the process title
-    process_pipeline_all_prospects()
+    # process_pipeline_all_prospects()
     # download_nasdaq()
     setproctitle.setproctitle("MyTechFlaskBackground")    
     app.run(port=5005, debug=True)

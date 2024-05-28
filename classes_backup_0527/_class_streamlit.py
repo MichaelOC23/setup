@@ -26,7 +26,6 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 
-
 # To analyze PDF layouts and extract text
 # from cv2 import AGAST_FEATURE_DETECTOR_THRESHOLD, log
 from pdfminer.high_level import extract_pages, extract_text
@@ -89,9 +88,9 @@ class streamlit_mytech():
                 page_title=PAGE_TITLE, page_icon=":earth_americas:", layout="wide", initial_sidebar_state="expanded",
                 menu_items={'Get Help': 'mailto:michael@justbuildit.com','Report a bug': 'mailto:michael@justbuildit.com',})    
 
-        if SETUP_DATABASE:
-            model_list, entity_list, attribute_list = asyncio.run(cs._create_test_data())
-            cs._setup_parameter_table(cs.parameter_table_name)
+        # if SETUP_DATABASE:
+        #     model_list, entity_list, attribute_list = asyncio.run(cs._create_test_data())
+        #     cs._setup_parameter_table(cs.parameter_table_name)
             
             # cs.local_postgres_management()
             # asyncio.run(cs.upsert_data(model_list))
@@ -2109,7 +2108,7 @@ def display_dj_search_results(streamlit_column):
                 rg.dataframe(formatted_result_list)
         else: 
             rg.write("No search results to display")
-()
+
 
 ####################################
 ##    CRUD FOR TRANSCRIPTION    ####
@@ -2142,10 +2141,116 @@ class transcription_library_crud():
         conn.execute(query)
 
 
+####################################
+##    PROSPECT LIST CLASS    ####
+####################################         
+class prospect_list():
+    def __init__(self):
+        self.connection_string = os.getenv('LOCAL_POSTGRES_CONNECTION_STRING1', 'postgresql://mytech:mytech@localhost:5400/mytech')
+        
+    async def create_prospect(self, table_name):
+        create_table_sql = f"""
+            CREATE TABLE IF NOT EXISTS prospect (
+                id serial4 NOT NULL,
+                Organization_CRD varchar(100) NULL,
+                SEC varchar(100) NULL,
+                Primary_Business_Name varchar(100) NULL,
+                Legal_Name varchar(100) NULL,
+                Main_Office_Street_Address_1 varchar(100) NULL,
+                Main_Office_Street_Address_2 varchar(100) NULL,
+                Main_Office_City varchar(100) NULL,
+                Main_Office_State varchar(100) NULL,
+                Main_Office_Country varchar(100) NULL,
+                Main_Office_Postal_Code varchar(100) NULL,
+                Main_Office_Telephone_Number varchar(100) NULL,
+                Chief_Compliance_Officer_Name varchar(100) NULL,
+                Chief_Compliance_Officer_Other_Titles varchar(100) NULL,
+                Chief_Compliance_Officer_Telephone varchar(100) NULL,
+                Chief_Compliance_Officer_Email varchar(100) NULL,
+                SEC_Status_Effective_Date varchar(100) NULL,
+                Website_Address varchar(200) NULL,
+                Entity_Type varchar(100) NULL,
+                Governing_Country varchar(100) NULL,
+                Total_Gross_Assets_of_Private_Funds DECIMAL
+            );
+        """
+        
+        
+        
+        conn = await asyncpg.connect(self.connection_string)
+        try:
+            await conn.execute(create_table_sql)
+            print(f"Table prospect created successfully.")
+        finally:
+            await conn.close()
+            
+    async def load_json_to_table(connection_string, table_name, json_file_path):
+        conn = await asyncpg.connect(connection_string)
+        try:
+            with open(json_file_path, 'r') as file:
+                data = json.load(file)
 
+            insert_sql = f"""
+            INSERT INTO {table_name} (
+                Organization_CRD,
+                SEC,
+                Primary_Business_Name,
+                Legal_Name,
+                Main_Office_Street_Address_1,
+                Main_Office_Street_Address_2,
+                Main_Office_City,
+                Main_Office_State,
+                Main_Office_Country,
+                Main_Office_Postal_Code,
+                Main_Office_Telephone_Number,
+                Chief_Compliance_Officer_Name,
+                Chief_Compliance_Officer_Other_Titles,
+                Chief_Compliance_Officer_Telephone,
+                Chief_Compliance_Officer_Email,
+                SEC_Status_Effective_Date,
+                Website_Address,
+                Entity_Type,
+                Governing_Country,
+                Total_Gross_Assets_of_Private_Funds
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+            );
+            """
+
+            for record in data:
+                values = (
+                    record.get("Organization_CRD"),
+                    record.get("SEC"),
+                    record.get("Primary_Business_Name"),
+                    record.get("Legal_Name"),
+                    record.get("Main_Office_Street_Address_1"),
+                    record.get("Main_Office_Street_Address_2"),
+                    record.get("Main_Office_City"),
+                    record.get("Main_Office_State"),
+                    record.get("Main_Office_Country"),
+                    record.get("Main_Office_Postal_Code"),
+                    record.get("Main_Office_Telephone_Number"),
+                    record.get("Chief_Compliance_Officer_Name"),
+                    record.get("Chief_Compliance_Officer_Other_Titles"),
+                    record.get("Chief_Compliance_Officer_Telephone"),
+                    record.get("Chief_Compliance_Officer_Email"),
+                    record.get("SEC_Status_Effective_Date"),
+                    record.get("Website_Address"),
+                    record.get("Entity_Type"),
+                    record.get("Governing_Country"),
+                    record.get("Total_Gross_Assets_of_Private_Funds")
+                )
+                await conn.execute(insert_sql, *values)
+
+            print(f"Data from {json_file_path} loaded into {table_name} successfully.")
+        finally:
+            await conn.close()
 
 
 #!#######    SCRIPT BODY     ########    
             
 SETUP_DATABASE = False
-cs = PsqlSimpleStorage
+# cs = PsqlSimpleStorage
+
+prospect_list = prospect_list()
+asyncio.run(prospect_list.create_prospect("prospect"))
