@@ -47,8 +47,8 @@ show_menu() {
     echo -e "|-------------------------------------------------------------|${NC}\n"
 
     echo -e "${GREEN}0) Commit the current repository${NC}"
-    echo -e "${YELLOW}1) Commit and Push All: VSCODE .JBI COMMUNIFY${NC}"
-    echo -e "${PINK}2) OPEN MENU ${NC}"
+    echo -e "${YELLOW}1) Commit and Push MyTech and .JBI ${NC}"
+    echo -e "${PINK}2) Start ListGen ${NC}"
     echo -e "${LIGHTBLUE}3) OPEN MENU ${NC}"
     echo -e "${YELLOW}4) Launch MyTech ${NC}"
     echo -e "${PURPLE}5) Display Color Palette${NC}"
@@ -93,68 +93,31 @@ read_choice() {
         ;;
 
     1)
-        echo "You chose Option 1: Commit and Push All: VSCODE .JBI COMMUNIFY\n"
-        echo "Committing and pushing $VSCODE_FOLDER_PATH"
-        # Navigate to your code directory
-        cd "${HOME}/code" || {
-            echo "Error: '${HOME}/code' directory not found."
+        echo "You chose Option 1: Commit and Push MyTech and .jbi \n"
+        cd "${HOME}/.jbi" || {
+            echo "Error: '${HOME}/.jbi' directory not found."
             exit 1
         }
+        commit_current_folder
 
-        # Find and iterate through all directories
-        for dir in */; do
-            cd "$dir" # Enter the directory
-
-            # Check if it's a Git repository
-            if [ -d .git ]; then
-                commit_current_folder
-            else
-                echo -e "${RED}Skipping ${PWD} (not a Git repository)${NC}"
-            fi
-
-            cd .. # Go back to the parent directory
-        done
-
-        cd ${HOME}/.jbi || exit
+        cd "${HOME}/code/mytech" || {
+            echo "Error: '${HOME}/code/mytech' directory not found."
+            exit 1
+        }
         commit_current_folder
 
         cd "${HOME}"
+
+        echo "Commit and Push of MyTech and .jbi complete"
+
         exit 0
 
         ;;
 
     2)
-        # echo "${RED_U}Shutdown, Delete, Pull, Reinstall and Start Stable Tools${NC}"
-        # if confirm "Do you want to proceed?"; then
-        #     # Check if app.py is running
-        #     APP_PY_PID=$(pgrep -f "streamlit run 000_Communify_Home")
-
-        #     if [ -n "$APP_PY_PID" ]; then
-        #         echo "app.py is running. Stopping it..."
-        #         kill $APP_PY_PID
-        #     fi
-
-        #     # Reinstall the Environment
-        #     STABLE_DIR="$HOME/code/.stable"
-        #     rm -rf $STABLE_DIR
-        #     mkdir -p $STABLE_DIR
-
-        #     cd $STABLE_DIR
-
-        #     git clone "https://michael:$AZURE_DEVOPS_PAT@dev.azure.com/$AZURE_DEVOPS_ORG/product-development/_git/communify"
-        #     cd communify
-        #     ./env_setup.sh
-
-        #     cd $STABLE_DIR
-
-        #     git clone "https://michael:$AZURE_DEVOPS_PAT@dev.azure.com/$AZURE_DEVOPS_ORG/product-development/_git/product-tools"
-        #     cd product-tools
-        #     ./env_setup.sh
-
-        #     # Relaunch app.py with streamlit
-        #     echo "Relaunching app.py with streamlit..."
-        #     source "$HOME/code/.stable/communify/communify_venv/bin/activate" && streamlit run "$HOME/code/.stable/communify/000_Communify_Home.py"
-        # else
+        echo "You chose Option 2: Start ListGen"
+        cd ~/code/mytech/docker/ListGen
+        docker-compose up --build
         #     echo "Returning to menu."
         # fi
         exit 0

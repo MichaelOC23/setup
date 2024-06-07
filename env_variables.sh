@@ -21,10 +21,6 @@ else
     echo -e "\033[1;34m > jq (JSON Parser) command is: \033[3;32m ** Present **.  \033[0m"
 fi
 
-# Define the paths to the .env files
-env_file1="${HOME}/code/mytech/.env"
-env_file2="${HOME}/.jbi/.env"
-
 SECRET_TITLES=""
 # Loop through each entry in the JSON array
 echo "$json_string" | jq -c '.[]' | while read -r i; do
@@ -40,11 +36,11 @@ echo "$json_string" | jq -c '.[]' | while read -r i; do
 done
 
 # Write SECRET_TITLES and all secrets to the .env file
-echo -e "SECRET_TITLES=${SECRET_TITLES}" >"$env_file1"
-echo -e "SECRET_TITLES=${SECRET_TITLES}" >"$env_file2"
 
-echo -e "\033[0;34m > Updated \033[0;32m ${env_file1} \033[0m."
-echo -e "\033[0;34m > Updated \033[0;32m ${env_file2} \033[0m."
+echo -e "SECRET_TITLES=${SECRET_TITLES}" >"${HOME}/code/mytech/.env"
+echo -e "SECRET_TITLES=${SECRET_TITLES}" >"${HOME}/code/mytech/docker/ListGen/flask/.env"
+echo -e "SECRET_TITLES=${SECRET_TITLES}" >"${HOME}/code/mytech/docker/ListGen/streamlit/.env"
+echo -e "SECRET_TITLES=${SECRET_TITLES}" >"${HOME}/.jbi/.env"
 
 #Check if $SHOW_ME exists and is set to 123456. if so echo a green message else a red message
 if [ -n "${SHOW_ME}" ] && [ "${SHOW_ME}" = "123456" ]; then
