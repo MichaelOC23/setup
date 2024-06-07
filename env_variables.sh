@@ -11,12 +11,14 @@ dcli sync
 #Get all the locally stored secrets
 json_string=$(dcli note localeFormat=UNIVERSAL -o json)
 echo "\033[1;34m > json_string with secrets \033[0;32m Successfully Obtained. \033[0m"
-#echo "json_string is ${json_string}"
+# echo "json_string is ${json_string}"
+
+
 
 # Ensure 'jq' is available (JSON Parser)
 if ! command -v jq &>/dev/null; then
     echo "\033[0;31m !!! jq (JSON Parser) command could not be found. It is required to obtain the secrets.\033[0m"
-    exit 1
+    exit 
 else
     echo -e "\033[1;34m > jq (JSON Parser) command is: \033[3;32m ** Present **.  \033[0m"
 fi
@@ -43,7 +45,7 @@ if [ -n "${SHOW_ME}" ] && [ "${SHOW_ME}" = "123456" ]; then
     echo -e "\033[0;34m > Date/Time of Secrets load: \033[0;32m  **  ${ENV_VAR_LOAD_DATE_TIME}  ** \033[0m"
 else
     echo -e "\033[0;31m > The value of SHOW_ME is not 123456. It is ${SHOW_ME}. This is incorrect. \033[0m"
-    exit 1
+    exit 
 fi
 
 #Standardize python commands
@@ -51,7 +53,6 @@ alias python='python3'
 alias pip='pip3'
 
 #Key Folder Locations for python scripts and projects
-export CODE_FOLDER_PATH="${HOME}/code" # "#Key Folder Locations THESE MUST BE CORRECT"
 export NVM_DIR=/opt/homebrew/Cellar/nvm/0.39.7
 
 # PATH export (Standard mack path)

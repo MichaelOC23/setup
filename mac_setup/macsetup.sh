@@ -197,6 +197,7 @@ read_choice() {
 
             #Local LLM Tools
             brew install --cask lm-studio
+            brew install openai-whisper
 
             #Install Postgres and pgadmin4
             brew install postgresql
