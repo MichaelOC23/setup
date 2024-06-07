@@ -18,6 +18,7 @@ jbi_venv/
 *.mp4
 *.m4a
 *.pyc
+*.env
 
 # Distribution / packaging
 .Python
