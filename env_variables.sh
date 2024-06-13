@@ -66,6 +66,7 @@ export PATH="${PATH}:/usr/sbin:/sbin:/usr/local/bin"      # Standard Path
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH" # Homebrew (prioritizing it over the system python)
 export PATH="${PATH}:${HOME}/.jbi/scripts"
 export PATH="${PATH}:${HOME}/.jbi/classes"                         # personal scripts
+export PATH="${PATH}:${HOME}/.jbi/transcription"
 export PATH="${PATH}:${HOME}/code/MyTech/classes"                  # personal scripts
 export PATH="${PATH}:${HOME}/code/MyTech/docker/MyTech/streamlit"  # personal scripts
 export PATH="${PATH}:${HOME}/code/MyTech/docker/ListGen/streamlit" # personal scripts
