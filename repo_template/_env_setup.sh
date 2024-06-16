@@ -28,7 +28,7 @@ VENV_DIR="${SCRIPT_DIR}/${VENV_NAME}"
 echo -e "Virtual environment directory: ${VENV_DIR}\033[0m"
 
 # add a symbolic link to the another folder with py files (if it doesn't exist)
-[ -d classes ] || ln -s ${HOME}/.jbi/classes ./classes
+[ -d classes ] || ln -s ${HOME}/code/mytech/classes ./classes
 
 # Full path to the virtual environment directory
 FULL_VENV_PATH="${SCRIPT_DIR}/${VENV_NAME}"

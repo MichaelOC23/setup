@@ -49,7 +49,7 @@ show_menu() {
     echo -e "${GREEN}0) Commit the current repository${NC}"
     echo -e "${YELLOW}1) Commit and Push MyTech and .JBI ${NC}"
     echo -e "${PINK}2) Start ListGen ${NC}"
-    echo -e "${LIGHTBLUE}3) OPEN MENU ${NC}"
+    echo -e "${LIGHTBLUE}3) Kill all Python Processes ${NC}"
     echo -e "${YELLOW}4) Launch MyTech ${NC}"
     echo -e "${PURPLE}5) Display Color Palette${NC}"
     echo -e "${GREEN}6) Grant terminal access to iCloud Drive${NC} "
@@ -124,24 +124,17 @@ read_choice() {
         ;;
 
     3)
-        echo "Open"
-        # # Activate the virtual environment
-        # source "$VSCODE_PATH/doccano/doccano_venv/bin/activate"
+        # Get a list of all Python processes and kill them
+        echo -e "Killing all Python processes..."
+        pkill -f python
 
-        # # Start the doccano task in the background
-        # doccano task &
-        # echo "Doccano task started. Waiting for 3 seconds..."
-        # sleep 3
+        # Check if there are any remaining Python processes
+        if pgrep -f python >/dev/null; then
+            echo "Some Python processes could not be terminated."
+        else
+            echo "All Python processes have been successfully terminated."
+        fi
 
-        # # Start the doccano webserver on port 8000 in the background
-        # doccano webserver --port 8000 &
-        # echo "Starting Doccano webserver. Waiting for 3 seconds..."
-        # sleep 3
-
-        # # Optional: add a wait command if you want the script to wait for these processes to finish
-        # # wait
-
-        # echo "Doccano tasks started."
         ;;
 
     4)

@@ -1,45 +1,92 @@
 #!/bin/bash
 
-# Define the folder containing the files as the current working directory
+# Database connection details
+DB_HOST="michael.ch6qakwu269h.us-east-1.rds.amazonaws.com"
+DB_NAME="postgres"
+DB_PORT=5432
+DB_USER="postgres"
+DB_PASSWORD=${POSTGRES_JBI_PASSWORD}
+DB_CONN_STRING="postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME"
 
+# Define the folder containing the files as the current working directory
 FOLDER_PATH="/Users/michasmi/Library/Group Containers/group.com.apple.VoiceMemos.shared/Recordings"
+FOLDER_PATH="/Users/michasmi/code/MyTech/transcriptions/testaudio" #Test
 TRANS_FOLDER_PATH="/Users/michasmi/code/MyTech/transcriptions"
-SKIP_LIST_FILE="${PWD}/skiplist.txt"
+TRANS_FOLDER_PATH="/Users/michasmi/code/MyTech/transcriptions/testtrans" #Test
 AUTH_TOKEN=${DEEPGRAM_API_KEY}
 BIT_RATE="64k"
 DEEPGRAM_URL="https://api.deepgram.com/v1/listen?topics=true&smart_format=true&punctuate=true&paragraphs=true&keywords=Sales%3A3&keywords=Marketing%3A3&keywords=Product%3A3&keywords=Client%3A3&keywords=Prospect%3A3&diarize=true&sentiment=true&language=en&model=nova-2"
 
-# Echo all the paths and file paths
+# Check if required commands are available
+command -v ffmpeg >/dev/null 2>&1 || {
+    echo "ffmpeg is not installed. Aborting." >&2
+    exit 1
+}
+command -v curl >/dev/null 2>&1 || {
+    echo "curl is not installed. Aborting." >&2
+    exit 1
+}
+command -v jq >/dev/null 2>&1 || {
+    echo "jq is not installed. Aborting." >&2
+    exit 1
+}
+
+# Function to check if a file is already processed
+
+is_file_processed() {
+    local file_name_only=$1
+    sqlcommand="SELECT EXISTS (SELECT 1 FROM textlibrary WHERE sourcefilename = '$file_name_only');"
+    result=$(psql "$DB_CONN_STRING" -t -c "$sqlcommand" | tr -d '[:space:]')
+    echo "$result"
+}
+
+insert_transcription_into_db() {
+    local file_name_only=$1
+    local transcription_path=$2
+    local alltext=$(jq -r '.results.channels[0].alternatives[0].transcript' "$transcription_path")
+    local structdata=$(jq -c '.' "$transcription_path")
+    local bypage=$(jq -c '.results.channels[0].alternatives[0].paragraphs.paragraphs[0].sentences' "$transcription_path")
+
+    echo -e "Inserting transcription for $file_name_only into database."
+
+    completeSQLcommand=$(
+        cat <<EOF
+INSERT INTO TextLibrary (sourcefilename, alltext, structdata, bypage) 
+VALUES ('$file_name_only', \$\$${alltext}\$\$, ARRAY[\$\$${structdata}\$\$::jsonb], ARRAY[\$\$${bypage}\$\$::jsonb]);
+EOF
+    )
+
+    # Output the SQL command for debugging
+    # echo -e "SQL Command: $completeSQLcommand"
+
+    # Execute the SQL command
+    psql "$DB_CONN_STRING" -c "$completeSQLcommand"
+}
+
+# Echo all the paths
 echo "Folder Path: $FOLDER_PATH"
 echo "Transcription Folder Path: $TRANS_FOLDER_PATH"
-echo "Skip List File: $SKIP_LIST_FILE"
 
-
-# Define the skip list file
-
-
-# Check if the skip list file exists
-if [[ ! -f "$SKIP_LIST_FILE" ]]; then
-    echo "Skip list file not found at $SKIP_LIST_FILE. Creating an empty one."
-    touch "$SKIP_LIST_FILE"
-fi
-
-# Loop through all files in the folder
-for file in "$FOLDER_PATH"/*; do
-    echo -e "\033[1;95mProcessing file: $file\033[0m"
-    # Check if the file is an m4a file
-    if [[ "$file" == *.m4a ]]; then
-        # Get the base name of the file without extension
-        base_name="${file%.m4a}" &
+# Function to process m4a files
+process_m4a_files() {
+    for file in "$FOLDER_PATH"/*.m4a; do
+        echo -e "\033[1;95mProcessing file: $file\033[0m"
+        base_name="${file%.m4a}"
         file_name_only=$(basename "$base_name")
 
-        # Check if the base name is in the skip list file
-        if grep -q "^${file_name_only}$" "$SKIP_LIST_FILE"; then
-            echo -e "\033[1;36mSkipping conversion for ${file_name_only}, listed in skip list.\033[0m"
+        echo -e "File Name Only: $file_name_only"
+
+        processed=$(is_file_processed "$file_name_only")
+        echo -e "is_file_processed returned: $processed"
+
+        if [[ $processed == "t" ]]; then
+            echo -e "\033[1;36mSkipping conversion for ${file_name_only}, already processed.\033[0m"
             continue
+        else
+            echo -e "\033[1;36mFile ${file_name_only} not processed.\033[0m"
+            # Add your processing logic here
         fi
 
-        # Convert the m4a file to mp3 using ffmpeg
         echo -e "\033[1;95mBeginning conversion of ${file_name_only}.m4a to mp3.\033[0m"
         ffmpeg -y -i "$file" -b:a $BIT_RATE "${base_name}.mp3"
         if [[ $? -eq 0 ]]; then
@@ -47,33 +94,53 @@ for file in "$FOLDER_PATH"/*; do
         else
             echo -e "\033[0;31mConversion FAILED for ${file_name_only}.m4a.\033[0m"
         fi
-    fi
-done
-wait
+    done
+    echo -e "\033[0;32mConversion of m4a files complete.\033[0m"
+}
+# Function to transcribe mp3 files
+transcribe_mp3_files() {
+    for mp3_file in "$FOLDER_PATH"/*.mp3; do
+        base_name="${mp3_file%.mp3}"
+        file_name_only=$(basename "$base_name")
+        transcription_path="${TRANS_FOLDER_PATH}/${file_name_only}.json"
 
-# Loop through all files again to process mp3 files without a corresponding json file
-for mp3_file in "$FOLDER_PATH"/*.mp3; do
-    # Get the base name of the mp3 file without extension
-    base_name="${mp3_file%.mp3}"
-    file_name_only=$(basename "$base_name")
+        echo -e "\033[1;95mProcessing mp3 file: $mp3_file\033[0m"
+        echo -e "File Name Only: $file_name_only"
+        echo -e "Transcription Path: $transcription_path"
 
-    # Define the path for the transcription JSON file
-    transcription_path="${TRANS_FOLDER_PATH}/${file_name_only}.json"
+        processed=$(is_file_processed "$file_name_only")
+        echo -e "is_file_processed returned: $processed"
 
-    # Check if the corresponding json file does not exist in the Transcriptions folder
-    if [[ ! -f "$transcription_path" ]]; then
-        echo -e "\033[1;95mBeginning transcription of ${file_name_only}.mp3\033[0m"
-        # Run the curl command to process the mp3 file with Deepgram API
-        curl -X POST \
-            -H "Authorization: Token $AUTH_TOKEN" \
-            --header 'Content-Type: audio/wav' \
-            --data-binary @"$mp3_file" \
-            "$DEEPGRAM_URL" >"$transcription_path" &
-            sleep 3
+        if [[ $processed == "t" ]]; then
+            echo -e "\033[1;36mSkipping transcription for ${file_name_only}, already transcribed.\033[0m"
+            continue
+        fi
+
+        if [[ ! -f "$transcription_path" ]]; then
+            echo -e "\033[1;95mBeginning transcription of ${file_name_only}.mp3\033[0m"
+            curl -X POST \
+                -H "Authorization: Token $AUTH_TOKEN" \
+                --header 'Content-Type: audio/wav' \
+                --data-binary @"$mp3_file" \
+                "$DEEPGRAM_URL" >"$transcription_path"
+            if [[ $? -ne 0 ]]; then
+                echo -e "\033[0;31mTranscription FAILED for ${file_name_only}.mp3.\033[0m"
+                continue
+            fi
+        else 
+            echo -e "\033[1;36mTranscription file ${file_name_only}.json already exists.\033[0m"
+        fi
+
         echo -e "\033[0;32mTranscription COMPLETE to ${file_name_only}.json.\033[0m"
-        echo "$file_name_only" >>"$SKIP_LIST_FILE"
-    else
-        echo -e "\033[1;36mTranscription file ${file_name_only}.json already exists.\033[0m"
-    fi
-done
+        insert_transcription_into_db "$file_name_only" "$transcription_path"
+    done
+    echo -e "\033[0;32mTranscription of mp3 files complete.\033[0m"
+}
+
+# Process m4a files
+process_m4a_files
+
+# Transcribe mp3 files
+transcribe_mp3_files
+
 wait
