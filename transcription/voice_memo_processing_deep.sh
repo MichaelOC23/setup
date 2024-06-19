@@ -10,12 +10,23 @@ DB_CONN_STRING="postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME"
 
 # Define the folder containing the files as the current working directory
 FOLDER_PATH="/Users/michasmi/Library/Group Containers/group.com.apple.VoiceMemos.shared/Recordings"
-FOLDER_PATH="/Users/michasmi/code/MyTech/transcriptions/testaudio" #Test
+# FOLDER_PATH="/Users/michasmi/code/MyTech/transcriptions/testaudio" #Test
 TRANS_FOLDER_PATH="/Users/michasmi/code/MyTech/transcriptions"
-TRANS_FOLDER_PATH="/Users/michasmi/code/MyTech/transcriptions/testtrans" #Test
+# TRANS_FOLDER_PATH="/Users/michasmi/code/MyTech/transcriptions/testtrans" #Test
+
 AUTH_TOKEN=${DEEPGRAM_API_KEY}
 BIT_RATE="64k"
 DEEPGRAM_URL="https://api.deepgram.com/v1/listen?topics=true&smart_format=true&punctuate=true&paragraphs=true&keywords=Sales%3A3&keywords=Marketing%3A3&keywords=Product%3A3&keywords=Client%3A3&keywords=Prospect%3A3&diarize=true&sentiment=true&language=en&model=nova-2"
+
+# Echo all the paths
+echo "Folder Path: $FOLDER_PATH"
+echo "Transcription Folder Path: $TRANS_FOLDER_PATH"
+
+#Check if the DB Password is set in the environment
+if [[ -z "$POSTGRES_JBI_PASSWORD" ]]; then
+    echo "DB Password is not set. Aborting." >&2
+    exit 1
+fi
 
 # Check if required commands are available
 command -v ffmpeg >/dev/null 2>&1 || {
@@ -32,14 +43,13 @@ command -v jq >/dev/null 2>&1 || {
 }
 
 # Function to check if a file is already processed
-
 is_file_processed() {
     local file_name_only=$1
     sqlcommand="SELECT EXISTS (SELECT 1 FROM textlibrary WHERE sourcefilename = '$file_name_only');"
     result=$(psql "$DB_CONN_STRING" -t -c "$sqlcommand" | tr -d '[:space:]')
     echo "$result"
 }
-
+# Function to insert transcription into TextLibrary
 insert_transcription_into_db() {
     local file_name_only=$1
     local transcription_path=$2
@@ -49,23 +59,19 @@ insert_transcription_into_db() {
 
     echo -e "Inserting transcription for $file_name_only into database."
 
-    completeSQLcommand=$(
-        cat <<EOF
-INSERT INTO TextLibrary (sourcefilename, alltext, structdata, bypage) 
-VALUES ('$file_name_only', \$\$${alltext}\$\$, ARRAY[\$\$${structdata}\$\$::jsonb], ARRAY[\$\$${bypage}\$\$::jsonb]);
-EOF
-    )
+    # Construct the SQL command using concatenation
+    local completeSQLcommand="INSERT INTO TextLibrary (sourcefilename, alltext, structdata, bypage) VALUES ("
+    completeSQLcommand+="'"${file_name_only}"', "
+    completeSQLcommand+="\$\$${alltext}\$\$, "
+    completeSQLcommand+="ARRAY[\$\$${structdata}\$\$::jsonb], "
+    completeSQLcommand+="ARRAY[\$\$${bypage}\$\$::jsonb]);"
 
     # Output the SQL command for debugging
-    # echo -e "SQL Command: $completeSQLcommand"
+    echo -e "SQL Command: $completeSQLcommand"
 
     # Execute the SQL command
     psql "$DB_CONN_STRING" -c "$completeSQLcommand"
 }
-
-# Echo all the paths
-echo "Folder Path: $FOLDER_PATH"
-echo "Transcription Folder Path: $TRANS_FOLDER_PATH"
 
 # Function to process m4a files
 process_m4a_files() {
@@ -75,6 +81,12 @@ process_m4a_files() {
         file_name_only=$(basename "$base_name")
 
         echo -e "File Name Only: $file_name_only"
+
+                    # Extract title from metadata
+        title=$(ffprobe -v error -show_entries format_tags=title -of default=nw=1:nk=1 "$file")
+        if [ -z "$title" ]; then
+            title="$file_name_only"
+        fi
 
         processed=$(is_file_processed "$file_name_only")
         echo -e "is_file_processed returned: $processed"
@@ -100,40 +112,46 @@ process_m4a_files() {
 # Function to transcribe mp3 files
 transcribe_mp3_files() {
     for mp3_file in "$FOLDER_PATH"/*.mp3; do
-        base_name="${mp3_file%.mp3}"
-        file_name_only=$(basename "$base_name")
-        transcription_path="${TRANS_FOLDER_PATH}/${file_name_only}.json"
+        {
+            base_name="${mp3_file%.mp3}"
+            file_name_only=$(basename "$base_name")
+            transcription_path="${TRANS_FOLDER_PATH}/${file_name_only}.json"
 
-        echo -e "\033[1;95mProcessing mp3 file: $mp3_file\033[0m"
-        echo -e "File Name Only: $file_name_only"
-        echo -e "Transcription Path: $transcription_path"
+            echo -e "\033[1;95mProcessing mp3 file: $mp3_file\033[0m"
+            echo -e "File Name Only: $file_name_only"
+            echo -e "Transcription Path: $transcription_path"
 
-        processed=$(is_file_processed "$file_name_only")
-        echo -e "is_file_processed returned: $processed"
+            processed=$(is_file_processed "$file_name_only")
+            echo -e "is_file_processed returned: $processed"
 
-        if [[ $processed == "t" ]]; then
-            echo -e "\033[1;36mSkipping transcription for ${file_name_only}, already transcribed.\033[0m"
-            continue
-        fi
-
-        if [[ ! -f "$transcription_path" ]]; then
-            echo -e "\033[1;95mBeginning transcription of ${file_name_only}.mp3\033[0m"
-            curl -X POST \
-                -H "Authorization: Token $AUTH_TOKEN" \
-                --header 'Content-Type: audio/wav' \
-                --data-binary @"$mp3_file" \
-                "$DEEPGRAM_URL" >"$transcription_path"
-            if [[ $? -ne 0 ]]; then
-                echo -e "\033[0;31mTranscription FAILED for ${file_name_only}.mp3.\033[0m"
+            if [[ $processed == "t" ]]; then
+                echo -e "\033[1;36mSkipping transcription for ${file_name_only}, already transcribed.\033[0m"
                 continue
             fi
-        else 
-            echo -e "\033[1;36mTranscription file ${file_name_only}.json already exists.\033[0m"
-        fi
 
-        echo -e "\033[0;32mTranscription COMPLETE to ${file_name_only}.json.\033[0m"
-        insert_transcription_into_db "$file_name_only" "$transcription_path"
+            if [[ ! -f "$transcription_path" ]]; then
+                echo -e "\033[1;95mBeginning transcription of ${file_name_only}.mp3\033[0m"
+                # curl -X POST \
+                #     -H "Authorization: Token $AUTH_TOKEN" \
+                #     --header 'Content-Type: audio/wav' \
+                #     --data-binary @"$mp3_file" \
+                #     "$DEEPGRAM_URL" >"$transcription_path"
+                # if [[ $? -ne 0 ]]; then
+                #     echo -e "\033[0;31mTranscription FAILED for ${file_name_only}.mp3.\033[0m"
+                #     continue
+                echo -e "\033[5;34m +++ Successfully transcribed to path: $transcription_path +++ \033[0m"
+            
+            else
+                echo -e "\033[1;36mTranscription file ${file_name_only}.json already exists.\033[0m"
+            fi
+
+            echo -e "\033[0;32mTranscription COMPLETE to ${file_name_only}.json.\033[0m"
+            insert_transcription_into_db "$file_name_only" "$transcription_path"
+        } &
     done
+
+    # Wait for all background jobs to complete
+    wait
     echo -e "\033[0;32mTranscription of mp3 files complete.\033[0m"
 }
 
